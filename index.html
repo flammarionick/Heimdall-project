@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inmate Database Registration</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Inmate Management System</h1>
+    <nav>
+      <ul>
+        <li><a href="#register">Register Inmate</a></li>
+        <li><a href="#recognition">Real-Time Recognition</a></li>
+        <li><a href="#admin">Admin Dashboard</a></li>
+      </ul>
+    </nav>
+  </header>
+  
+  <main>
+    <!-- User Registration Page -->
+    <section id="register">
+      <h2>Register Inmate</h2>
+      <form id="inmateForm" enctype="multipart/form-data">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        
+        <label for="inmate_id">Inmate ID:</label>
+        <input type="text" id="inmate_id" name="inmate_id" required>
+
+        <label for="status">Status:</label>
+        <select id="status" name="status" required>
+          <option value="active">Active</option>
+          <option value="released">Released</option>
+        </select>
+
+        <label for="file">Upload Face Image:</label>
+        <input type="file" id="file" name="file" accept="image/*" required>
+
+        <button type="submit">Submit</button>
+      </form>
+    </section>
+
+    <!-- Real-Time Recognition Page -->
+    <section id="recognition">
+      <h2>Real-Time Face Recognition</h2>
+      <video id="video" width="640" height="480" autoplay></video>
+      <button id="startRecognition">Start Recognition</button>
+      <div id="recognitionResults"></div>
+    </section>
+
+    <!-- Admin Dashboard -->
+    <section id="admin">
+      <h2>Admin Dashboard</h2>
+      <h3>Manage Registered Users</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Inmate ID</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="userTable">
+          <!-- User data will be dynamically populated here -->
+        </tbody>
+      </table>
+      <h3>Monitor Recognition Performance</h3>
+      <div id="performanceMetrics">
+        <p>Total Recognitions: <span id="totalRecognitions">0</span></p>
+        <p>Successful Matches: <span id="successfulMatches">0</span></p>
+        <p>Failed Matches: <span id="failedMatches">0</span></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // Real-Time Recognition Logic
+    const video = document.getElementById('video');
+    const recognitionResults = document.getElementById('recognitionResults');
+    
+    // Access the device camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error("Error accessing camera: ", err);
+      });
+
+    document.getElementById('startRecognition').addEventListener('click', () => {
+      // Placeholder for real-time recognition logic
+      recognitionResults.innerHTML = "Starting recognition...";
+      // Call your face recognition model here and update the results
+    });
+
+    // Admin Dashboard - Sample Data
+    const userTable = document.getElementById('userTable');
+    const users = [
+      { name: "John Doe", inmate_id: "12345", status: "active" },
+      { name: "Jane Smith", inmate_id: "67890", status: "released" }
+    ];
+
+    users.forEach(user => {
+      const row = userTable.insertRow();
+      row.innerHTML = `
+        <td>${user.name}</td>
+        <td>${user.inmate_id}</td>
+        <td>${user.status}</td>
+        <td><button onclick="deleteUser('${user.inmate_id}')">Delete</button></td>
+      `;
+    });
+
+    function deleteUser(inmateId) {
+      // Placeholder for delete user logic
+      alert(`Delete user with Inmate ID: ${inmateId}`);
+      // Implement deletion functionality
+    }
+  </script>
+</body>
+</html>
