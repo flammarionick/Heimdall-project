@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inmate Database Registration</title>
+  <title>Inmate Management System</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,18 +11,67 @@
     <h1>Inmate Management System</h1>
     <nav>
       <ul>
-        <li><a href="#register">Register Inmate</a></li>
-        <li><a href="#recognition">Real-Time Recognition</a></li>
-        <li><a href="#admin">Admin Dashboard</a></li>
+        <li><a href="#landing" onclick="showPage('landing')">Home</a></li>
+        <li><a href="#login" onclick="showPage('login')">Login</a></li>
+        <li><a href="#admin-dashboard" onclick="showPage('admin-dashboard')">Admin Dashboard</a></li>
+        <li><a href="#register-inmate" onclick="showPage('register-inmate')">Register Inmate</a></li>
+        <li><a href="#real-time-recognition" onclick="showPage('real-time-recognition')">Real-Time Recognition</a></li>
       </ul>
     </nav>
   </header>
-  
-  <main>
-    <!-- User Registration Page -->
-    <section id="register">
+
+  <!-- Landing Page -->
+  <main id="landing" class="page">
+    <section>
+      <h2>Welcome to the Inmate Management System</h2>
+      <p>Securely manage inmate registrations, track activity, and monitor facility safety in real time.</p>
+    </section>
+  </main>
+
+  <!-- Login Page -->
+  <main id="login" class="page" style="display: none;">
+    <section>
+      <h2>Login</h2>
+      <form id="loginForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+
+        <button type="submit">Login</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Admin Dashboard -->
+  <main id="admin-dashboard" class="page" style="display: none;">
+    <section>
+      <h2>Admin Dashboard</h2>
+      <button onclick="showPage('create-user')">Create New User</button>
+      <button onclick="showPage('update-admin')">Update Admin Credentials</button>
+
+      <h3>Manage Registered Users</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="userTable">
+          <!-- User data will be dynamically populated here -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Register Inmate Page -->
+  <main id="register-inmate" class="page" style="display: none;">
+    <section>
       <h2>Register Inmate</h2>
-      <form id="inmateForm" enctype="multipart/form-data">
+      <form id="inmateForm">
         <label for="name">Name:</label>
         <input type="text" id="name" name="name" required>
         
@@ -41,32 +90,16 @@
         <button type="submit">Submit</button>
       </form>
     </section>
+  </main>
 
-    <!-- Real-Time Recognition Page -->
-    <section id="recognition">
+  <!-- Real-Time Recognition Page -->
+  <main id="real-time-recognition" class="page" style="display: none;">
+    <section>
       <h2>Real-Time Face Recognition</h2>
       <video id="video" width="640" height="480" autoplay></video>
       <button id="startRecognition">Start Recognition</button>
       <div id="recognitionResults"></div>
-    </section>
-
-    <!-- Admin Dashboard -->
-    <section id="admin">
-      <h2>Admin Dashboard</h2>
-      <h3>Manage Registered Users</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Inmate ID</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="userTable">
-          <!-- User data will be dynamically populated here -->
-        </tbody>
-      </table>
+      
       <h3>Monitor Recognition Performance</h3>
       <div id="performanceMetrics">
         <p>Total Recognitions: <span id="totalRecognitions">0</span></p>
@@ -76,49 +109,44 @@
     </section>
   </main>
 
+  <!-- Create New User Page -->
+  <main id="create-user" class="page" style="display: none;">
+    <section>
+      <h2>Create New User</h2>
+      <form id="createUserForm">
+        <label for="newUsername">Username:</label>
+        <input type="text" id="newUsername" name="newUsername" required>
+
+        <label for="newPassword">Password:</label>
+        <input type="password" id="newPassword" name="newPassword" required>
+
+        <button type="submit">Create User</button>
+      </form>
+      <button onclick="showPage('admin-dashboard')">Back to Dashboard</button>
+    </section>
+  </main>
+
+  <!-- Update Admin Credentials Page -->
+  <main id="update-admin" class="page" style="display: none;">
+    <section>
+      <h2>Update Admin Credentials</h2>
+      <form id="updateAdminForm">
+        <label for="adminUsername">New Username:</label>
+        <input type="text" id="adminUsername" name="adminUsername" required>
+
+        <label for="adminPassword">New Password:</label>
+        <input type="password" id="adminPassword" name="adminPassword" required>
+
+        <button type="submit">Update Admin</button>
+      </form>
+      <button onclick="showPage('admin-dashboard')">Back to Dashboard</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2024 Inmate Management System. All rights reserved.</p>
+  </footer>
+
   <script src="app.js"></script>
-  <script>
-    // Real-Time Recognition Logic
-    const video = document.getElementById('video');
-    const recognitionResults = document.getElementById('recognitionResults');
-    
-    // Access the device camera
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        console.error("Error accessing camera: ", err);
-      });
-
-    document.getElementById('startRecognition').addEventListener('click', () => {
-      // Placeholder for real-time recognition logic
-      recognitionResults.innerHTML = "Starting recognition...";
-      // Call your face recognition model here and update the results
-    });
-
-    // Admin Dashboard - Sample Data
-    const userTable = document.getElementById('userTable');
-    const users = [
-      { name: "John Doe", inmate_id: "12345", status: "active" },
-      { name: "Jane Smith", inmate_id: "67890", status: "released" }
-    ];
-
-    users.forEach(user => {
-      const row = userTable.insertRow();
-      row.innerHTML = `
-        <td>${user.name}</td>
-        <td>${user.inmate_id}</td>
-        <td>${user.status}</td>
-        <td><button onclick="deleteUser('${user.inmate_id}')">Delete</button></td>
-      `;
-    });
-
-    function deleteUser(inmateId) {
-      // Placeholder for delete user logic
-      alert(`Delete user with Inmate ID: ${inmateId}`);
-      // Implement deletion functionality
-    }
-  </script>
 </body>
 </html>
