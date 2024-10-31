@@ -103,6 +103,36 @@ function deleteUser(username) {
   populateUserTable();
 }
 
+// Register new user
+document.getElementById("registerUserForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const response = await fetch('/register_user', {
+      method: 'POST',
+      body: formData
+  });
+  const result = await response.text();
+  alert(result);
+});
+
+// Search and filter inmates
+function searchInmates(query) {
+  // Code to send query to backend and update table
+  fetch(`/search_inmates?query=${query}`)
+      .then(response => response.json())
+      .then(data => {
+          // Populate inmate table with filtered data
+      });
+}
+
+// Display notification on dashboard
+function showNotification(message) {
+  document.getElementById("dashboardNotification").innerText = message;
+}
+
+// Real-time recognition and camera access code as per the existing functionality
+
+
 // Real-time recognition functionality with camera access
 document.getElementById("startRecognition").addEventListener("click", () => {
   const video = document.getElementById("video");
