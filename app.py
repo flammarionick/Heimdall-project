@@ -2,86 +2,123 @@ import os
 import sqlite3
 import cv2
 import tensorflow as tf
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify, redirect, url_for
+from flask_mail import Mail, Message
+from datetime import datetime
 
 app = Flask(__name__)
 
-# Folder to store uploaded images
+# Configure email notifications
+app.config['MAIL_SERVER'] = 'smtp.example.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USERNAME'] = 'your_email@example.com'
+app.config['MAIL_PASSWORD'] = 'your_password'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+mail = Mail(app)
+
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Initialize the SQLite database to store inmate data
+# Initialize SQLite database to store data
 def init_db():
     conn = sqlite3.connect('inmate_database.db')
     cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS inmates
-                      (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                       name TEXT NOT NULL,
-                       inmate_id TEXT NOT NULL UNIQUE,
-                       status TEXT,
-                       face_image TEXT)''')
+    # Create tables for inmates, users, and activity logs
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            role TEXT CHECK(role IN ('admin', 'user')) NOT NULL,
+            user_id TEXT UNIQUE
+        )''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS inmates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        inmate_id TEXT NOT NULL UNIQUE,
+        status TEXT,
+        face_image TEXT
+    )''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS activity_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT,
+        action TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )''')
     conn.commit()
     conn.close()
 
-# Function to store inmate data in the database
-def store_inmate_data(name, inmate_id, status, file_path):
+# Register a new user with a unique ID
+@app.route('/register_user', methods=['POST'])
+def register_user():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    role = request.form.get('role')
+    user_id = f'USER-{int(datetime.now().timestamp())}'
+
     conn = sqlite3.connect('inmate_database.db')
     cursor = conn.cursor()
-    cursor.execute('''INSERT INTO inmates (name, inmate_id, status, face_image)
-                      VALUES (?, ?, ?, ?)''', (name, inmate_id, status, file_path))
+    cursor.execute('INSERT INTO users (username, password, role, user_id) VALUES (?, ?, ?, ?)',
+                   (username, password, role, user_id))
+    conn.commit()
+    conn.close()
+    return f"User {username} registered successfully with ID {user_id}"
+
+# Authentication route
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form.get('username')
+    password = request.form.get('password')
+
+    conn = sqlite3.connect('inmate_database.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE username=? AND password=?', (username, password))
+    user = cursor.fetchone()
+    conn.close()
+    if user:
+        return jsonify(success=True, user_id=user[4], role=user[3])  # Returning user ID and role
+    return jsonify(success=False)
+
+# Log activity
+def log_activity(user_id, action):
+    conn = sqlite3.connect('inmate_database.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO activity_log (user_id, action) VALUES (?, ?)', (user_id, action))
     conn.commit()
     conn.close()
 
-# Homepage route (inmate registration form)
-@app.route('/')
-def index():
-    return render_template('index.html')
+# Send email notification
+def send_notification(email, subject, message):
+    msg = Message(subject, sender='your_email@example.com', recipients=[email])
+    msg.body = message
+    mail.send(msg)
 
-# Register inmate route
-@app.route('/register', methods=['POST'])
+# Register inmate and store profile
+@app.route('/register_inmate', methods=['POST'])
 def register_inmate():
-    name = request.form.get('name')
-    inmate_id = request.form.get('inmate_id')
-    status = request.form.get('status')
-    file = request.files['file']
+    # Existing code to register inmate...
+    # Log activity
+    log_activity(user_id="admin", action="Registered new inmate")
 
-    if file.filename == '':
-        return "No file selected"
+    # Send notification example
+    send_notification("stakeholder@example.com", "New Inmate Registered",
+                      f"Inmate {name} has been successfully registered.")
+    return f"Inmate {name} registered successfully."
 
-    # Save the uploaded face image
-    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
-    file.save(file_path)
+# Generate report (e.g., PDF or CSV)
+@app.route('/generate_report', methods=['GET'])
+def generate_report():
+    conn = sqlite3.connect('inmate_database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM inmates")
+    inmates = cursor.fetchall()
+    conn.close()
+    # Implement export functionality
+    return jsonify(inmates)
 
-    # Process the image with the AI model (facial recognition)
-    recognition_result = process_image(file_path)
-
-    # Store inmate data in the database
-    store_inmate_data(name, inmate_id, status, file_path)
-
-    return f"Inmate {name} (ID: {inmate_id}, Status: {status}) registered successfully with recognition result: {recognition_result}"
-
-# Dummy image processing (facial recognition) function
-def process_image(file_path):
-    # Load the image and preprocess it
-    image = cv2.imread(file_path)
-    processed_image = preprocess_for_model(image)  # Preprocessing logic here
-
-    # Load your trained AI face recognition model
-    model = tf.keras.models.load_model('path_to_model.h5')
-
-    # Run the image through the model for facial recognition
-    result = model.predict(processed_image)
-
-    return result
-
-# Dummy preprocessing function for AI model input
-def preprocess_for_model(image):
-    resized_image = cv2.resize(image, (224, 224))  # Assuming model takes 224x224 input
-    processed_image = resized_image / 255.0  # Normalize
-    return processed_image.reshape(1, 224, 224, 3)  # Add batch dimension
-
-# Initialize the database when the app starts
+# Initialize database
 if __name__ == '__main__':
-    init_db()  # Initialize the database
+    init_db()
     app.run(debug=True)
