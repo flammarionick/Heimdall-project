@@ -1,0 +1,247 @@
+/* Reset and Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font: roboto;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+header {
+  font: roboto;
+  width: 100%;
+  padding: 20px;
+  text-align: center;
+  background-color: rgba(29, 51, 83);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+  font-size: 2.5rem;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+nav ul {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  list-style: none;
+  margin-top: 10px;
+}
+
+nav ul li a {
+  color: white;
+  background-color:  rgb(0, 153, 234);
+  border-width: thin;
+  border-color:rgb(10,102,194);
+  cursor: pointer;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 18px;
+  padding-right: 18px;
+  border-radius: 18px;
+  font-weight: bold;
+  transition: border-width 0.15s, background-color 0.15s;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 6px 8px;
+ }
+
+nav ul li a:hover {
+  border-width: thick;
+  margin-top: 30px;
+  color:  rgb(0, 153, 234);
+  background-color:white;
+  border-color: rgb(10,102,194);
+
+}
+
+/* Sections and Page Layout */
+.page {
+  display: none;
+  width: 100%;
+  max-width: 700px;
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+  margin-bottom: 20px;
+}
+
+.page.active {
+  display: block;
+}
+
+.page h2 {
+  font-size: 1.75rem;
+  color: #4267B2;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+/* Forms */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+form input[type="text"],
+form input[type="password"],
+form select,
+form button {
+  padding: 12px;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  border: 1px solid #ced0d4;
+  outline: none;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+form input:focus, 
+form select:focus {
+  border-color: #4267B2;
+  background-color: #f0f7ff;
+}
+
+form button {
+  background-color: #4267B2;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+}
+
+form button:hover {
+  background-color: #365899;
+}
+
+/* Admin Dashboard Table */
+#userTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#userTable thead {
+  background-color: #f0f2f5;
+}
+
+#userTable th, 
+#userTable td {
+  padding: 12px;
+  border: 1px solid #dfe3e8;
+  text-align: left;
+  background-color: #fff;
+}
+
+#userTable th {
+  background-color: #f7f9fc;
+  font-weight: bold;
+}
+
+#userTable tr:hover {
+  background-color: #f0f7ff;
+}
+
+#userTable td button {
+  padding: 6px 12px;
+  background-color: #f8f9fa;
+  border: 1px solid #ced0d4;
+  border-radius: 4px;
+  color: #4267B2;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#userTable td button:hover {
+  background-color: #e2e6ea;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  margin-top: 40px;
+  color: #666;
+}
+
+footer p {
+  font-size: 0.9rem;
+}
+
+.login-nav {
+  color: white;
+  background-color:  rgb(0, 153, 234);
+  border-width: thin;
+  border-color:rgb(10,102,194);
+  cursor: pointer;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 18px;
+  padding-right: 18px;
+  border-radius: 18px;
+  font-weight: bold;
+  transition: border-width 0.15s, background-color 0.15s;
+  
+}
+
+.login-nav:hover {
+  border-width: thick;
+  margin-top: 30px;
+  color:  rgb(0, 153, 234);
+  background-color:white;
+  border-color: rgb(10,102,194);
+
+}
+
+.home-nav {
+  margin-top: 40px;
+}
+
+
+.logo {
+  width: 200px;
+  border-radius: 75px;
+}
+
+.button {
+  color: white;
+  background-color:  rgb(0, 153, 234);
+  border-width: thin;
+  border-color:rgb(10,102,194);
+  cursor: pointer;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 18px;
+  padding-right: 18px;
+  border-radius: 18px;
+  font-weight: bold;
+  transition: border-width 0.15s, background-color 0.15s;
+  display: flex;
+  margin-bottom: 15px;
+}
+
+.button:hover {
+  border-width: thick;
+  margin-top: 30px;
+  color:  rgb(0, 153, 234);
+  background-color:white;
+  border-color: rgb(10,102,194);
+
+}
+
+
+

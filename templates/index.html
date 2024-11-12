@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg" href="/static/images/icon.svg"> 
+  <title>Heimdall Security System</title>
+  
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>
+        <img class="logo" src="/static/images/icon.svg">
+
+      </h1>
+    </div>
+        
+    
+
+    <p style="margin-bottom: 20px;">
+      Please
+    </p>
+
+      <nav>
+       <ul>
+         <li><a href="#login" onclick="showPage('login')" class="login-nav">Login</a></li>
+       </ul>
+      </nav>
+
+     <P style="margin-top: 15px;">
+       to access heimdall criminal detection system
+     </P>
+
+     <nav>
+      <ul>
+        <li><a href="#landing" onclick="showPage('landing')" class="home-nav">Home</a></li>
+      </ul>
+     </nav>
+
+  </header>
+
+  <!-- Landing Page -->
+  <main id="landing" class="page">
+    <section>
+      <h2>Welcome to the Heimdall Security System</h2>
+      <p>Securely manage inmate registrations and monitor facility safety in real time.</p>
+    </section>
+
+    <nav>
+      <ul>
+        <li><a href="#admin-dashboard" onclick="showPage('admin-dashboard')">Admin Dashboard</a></li>
+        <li><a href="#register-inmate" onclick="showPage('register-inmate')">Register Inmate</a></li>
+        <li><a href="#real-time-recognition" onclick="showPage('real-time-recognition')">Real-Time Recognition</a></li>
+      </ul>
+    </nav>
+  </main>
+
+  <!-- Login Page -->
+<main id="login" class="page" style="display: none;">
+  <section>
+      <h2>Login</h2>
+      <form id="loginForm" onsubmit="handleLogin(event)">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" autocomplete="username" required>
+
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required>
+
+          <button type="submit">Login</button>
+      </form>
+  </section>
+</main>
+
+
+  <!-- Admin Dashboard -->
+  <main id="admin-dashboard" class="page" style="display: none;">
+    <section>
+      <h2>Admin Dashboard</h2>
+      <button onclick="showPage('register-user')" class="button">
+        Create New User
+      </button>
+
+      <button onclick="showPage('update-admin')" class="button">
+        Update Admin Credentials
+      </button>
+
+      <h3>Manage Registered Users</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="userTable">
+          <!-- User data will be dynamically populated here -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Register User -->
+<main id="register-user" class="page" style="display: none;">
+  <section>
+    <h2>Register User</h2>
+    <form id="registerUserForm" action="/register_user" method="POST" autocomplete="on">
+      <label for="registerUsername">Username:</label>
+      <input type="text" id="registerUsername" name="username" required autocomplete="username">
+      <label for="registerPassword">Password:</label>
+      <input type="password" id="registerPassword" name="password" required autocomplete="new-password">
+      <label for="role">Role:</label>
+      <select id="role" name="role" autocomplete="off">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button type="submit">Register User</button>
+    </form>
+  </section>
+</main>
+
+
+
+
+  <!-- Activity Logs -->
+  <main id="activity-log" class="page" style="display: none;">
+    <section>
+      <h2>Activity Log</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>User ID</th>
+            <th>Action</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody id="activityTable">
+          <!-- Data populated dynamically -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Register Inmate Page -->
+  <main id="register-inmate" class="page" style="display: none;">
+    <section>
+      <h2>Register Inmate</h2>
+      <form id="inmateForm" onsubmit="handleInmateRegistration(event)">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" autocomplete= "additional-name" required>
+        
+        <label for="status">Status:</label>
+        <select id="status" name="status" required>
+          <option value="active">Active</option>
+          <option value="released">Released</option>
+        </select>
+
+        <label for="file">Upload Face Image:</label>
+        <input type="file" id="file" name="face_image" accept="image/*" required>
+
+        <button type="submit">Submit</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Real-Time Recognition Page -->
+  <main id="real-time-recognition" class="page" style="display: none;">
+    <section>
+      <h2>Real-Time Face Recognition</h2>
+      <video id="video" width="640" height="480" autoplay></video>
+      <button id="startRecognition">Start Recognition</button>
+      <div id="recognitionResults"></div>
+      
+      <h3>Monitor Recognition Performance</h3>
+      <div id="performanceMetrics">
+        <p>Total Recognitions: <span id="totalRecognitions">0</span></p>
+        <p>Successful Matches: <span id="successfulMatches">0</span></p>
+        <p>Failed Matches: <span id="failedMatches">0</span></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Update Admin Credentials Page -->
+  <main id="update-admin" class="page" style="display: none;">
+    <section>
+      <h2>Update Admin Credentials</h2>
+      <form id="updateAdminForm" onsubmit="handleUpdateAdmin(event)">
+        <label for="adminUsername">New Username:</label>
+        <input type="text" id="adminUsername" name="adminUsername" required>
+
+        <label for="adminPassword">New Password:</label>
+        <input type="password" id="adminPassword" name="adminPassword" required>
+
+        <button type="submit">Update Admin</button>
+      </form>
+    </section>
+  </main>
+
+  <section id="admin-dashboard" class="page">
+    <h2>Admin Dashboard</h2>
+  
+    <!-- User Registration Form -->
+    <form id="createUserForm">
+      <label for="newUsername">Username:</label>
+      <input type="text" id="newUsername" required>
+      <label for="newPassword">Password:</label>
+      <input type="password" id="newPassword" required>
+      <button type="submit">Create User</button>
+    </form>
+  
+    <!-- User Table for Admin -->
+    <table id="userTable">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- User entries will be inserted dynamically -->
+      </tbody>
+    </table>
+  </section>
+  
+
+  <footer>
+    <p>&copy; 2024 Heimdall Security. All rights reserved.</p>
+  </footer>
+
+<!-- Video for camera access -->
+<section id="real-time-recognition" class="page">
+  <h2>Real-Time Recognition</h2>
+  <video id="video" width="640" height="480" autoplay></video>
+  <button id="startRecognition">Start Recognition</button>
+</section>
+
+  <script src="/static/js/app.js" defer></script>
+</body>
+</html>
