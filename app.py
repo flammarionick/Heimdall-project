@@ -59,6 +59,9 @@ def verify_or_add_admin():
     conn.close()
 
 
+# Check if user is default admin
+def is_default_admin():
+    return session.get('username') == "Admin" and session.get('role') == "admin"
 
 
 # Function to retrieve user role from the database
@@ -139,6 +142,43 @@ def register_user():
     conn.commit()
     conn.close()
     return jsonify({'message': f"User {username} registered successfully with ID {user_id}"}), 201
+
+# Route to retrieve all non-admin users (admin-only)
+@app.route('/admin/get_users', methods=['GET'])
+def get_users():
+    print("Session Data:", session)  # Print session data for debugging
+    if not is_default_admin():
+        return jsonify({'error': 'Unauthorized access'}), 403
+
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, role FROM users WHERE role != 'admin'")
+    users = [{'username': row[0], 'role': row[1]} for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(users), 200
+
+
+# Admin route to perform actions on users (e.g., delete, suspend)
+@app.route('/admin/user_action', methods=['POST'])
+def user_action():
+    if not is_default_admin():
+        return jsonify({'error': 'Access denied'}), 403
+
+    data = request.get_json()
+    username = data.get('username')
+    action = data.get('action')  # 'edit', 'suspend', or 'delete'
+
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    if action == 'delete':
+        cursor.execute("DELETE FROM users WHERE username = ?", (username,))
+    elif action == 'suspend':
+        cursor.execute("UPDATE users SET status = 'suspended' WHERE username = ?", (username,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': f'User {username} {action}d successfully.'})
+
+
 
 # Route to serve the main page
 @app.route('/')

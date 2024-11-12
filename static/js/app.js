@@ -13,7 +13,7 @@ function showPage(pageId) {
       showPage('login');
       return;  // Prevent further code execution in showPage
     } else {
-      populateUserTable();
+      fetchAllUsers();
     }
   }
 }
@@ -92,7 +92,69 @@ document.getElementById("registerUserForm").addEventListener("submit", async fun
 });
 
 
+// Function to fetch all users and display them using .then()
+function fetchAllUsers() {
+  fetch('/admin/get_users')
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        console.log(data.error);  // Display error message if present
+      } else {
+        displayUserList(data);  // Display users in the UI
+      }
+    })
+    .catch(error => console.error('Error fetching users:', error));  // Error handling
+}
 
+// Display user list in the admin dashboard
+function displayUserList(users) {
+  const userTable = document.getElementById("userTable");
+  userTable.innerHTML = "";  // Clear any previous entries
+
+  users.forEach(user => {
+    const row = document.createElement("tr");
+
+    // Create table cells for username and role
+    const usernameCell = document.createElement("td");
+    usernameCell.textContent = user.username;
+    row.appendChild(usernameCell);
+
+    const roleCell = document.createElement("td");
+    roleCell.textContent = user.role;
+    row.appendChild(roleCell);
+
+    // Create action buttons (Edit, Suspend, Delete) with event listeners
+    const actionsCell = document.createElement("td");
+
+    ["Edit", "Suspend", "Delete"].forEach(action => {
+      const actionButton = document.createElement("button");
+      actionButton.textContent = action;
+      actionButton.classList.add("action-button", action.toLowerCase());
+      actionButton.addEventListener("click", () => handleUserAction(user.username, action.toLowerCase()));
+      actionsCell.appendChild(actionButton);
+    });
+
+    row.appendChild(actionsCell);
+    userTable.appendChild(row);
+  });
+}
+
+// Function to handle admin actions
+async function handleUserAction(username, action) {
+  try {
+    const response = await fetch('/admin/user_action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, action })
+    });
+
+    const result = await response.json();
+    alert(result.message);
+    fetchAllUsers();  // Refresh the user list after action
+  } catch (error) {
+    console.error("Error performing user action:", error);
+  }
+}
 
 
 
@@ -164,11 +226,13 @@ document.getElementById("startRecognition").addEventListener("click", () => {
   } else {
     alert("Your browser does not support camera access.");
   }
+  
 });
 
-
-
-
-
-
-
+// Call the function when the page loads
+window.onload = function() {
+  // You can call any other functions here as well
+  if (currentUser && currentUser.isAdmin) {
+    fetchAllUsers();  // Fetch and display the users if the admin is logged in
+  }
+};
