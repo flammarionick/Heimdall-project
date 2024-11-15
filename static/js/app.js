@@ -19,6 +19,8 @@ function showPage(pageId) {
 }
 
 
+
+
 // Handle login functionality
 document.getElementById("loginForm").addEventListener("submit", async function(event) {
   event.preventDefault();
@@ -141,20 +143,96 @@ function displayUserList(users) {
 
 // Function to handle admin actions
 async function handleUserAction(username, action) {
-  try {
-    const response = await fetch('/admin/user_action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, action })
-    });
+  if (action === "edit") {
+     // Show the edit form on the current page
+     showEditUserPage(username); // Call function to load and show the edit form
+  } else {
+    try {
+      const response = await fetch(`/admin/${action}_user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      });
 
-    const result = await response.json();
-    alert(result.message);
-    fetchAllUsers();  // Refresh the user list after action
-  } catch (error) {
-    console.error("Error performing user action:", error);
+      const result = await response.json();
+      alert(result.message);
+      fetchAllUsers();  // Refresh the user list after action
+    } catch (error) {
+      console.error(`Error performing ${action} action:`, error);
+    }
   }
 }
+
+// Function to show the edit form on the current page
+async function showEditUserPage(username) {
+  try {
+    // Fetch user data
+    const response = await fetch(`/admin/get_user/${username}`);
+    const userData = await response.json();
+
+    // Populate the form fields with user data
+    document.getElementById("edit-username").value = userData.username;
+    document.getElementById("edit-role").value = userData.role;
+    document.getElementById("edit-password").value = ""; // Clear password field
+
+     // Display the edit user page section
+     document.getElementById("edit-user-page").style.display = "block";
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  }
+
+// Event listener to handle the form submission for updating the user
+document.getElementById("edit-user-form").addEventListener("submit", async function(event) {
+  event.preventDefault();
+  
+  const username = document.getElementById("edit-username").value;
+  const role = document.getElementById("edit-role").value;
+
+  try {
+    const response = await fetch(`/admin/update_user/${username}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role })
+    });
+    const result = await response.json();
+    alert(result.message);
+
+    // Hide the edit form after update and refresh the user list
+    document.getElementById("edit-user-page").style.display = "none";
+    fetchAllUsers();
+  } catch (error) {
+    console.error("Error updating user:", error);
+  }
+});
+
+
+function suspendUser(userId) {
+  fetch(`/admin/suspend_user/${userId}`, {
+      method: 'POST'
+  })
+  .then(response => response.json())
+  .then(data => {
+      alert(data.message);
+      location.reload();  // Refresh the page to show the updated status
+  })
+  .catch(error => console.error('Error:', error));
+}
+
+function deleteUser(userId) {
+  if (confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+      fetch(`/admin/delete_user/${userId}`, {
+          method: 'POST'
+      })
+      .then(response => response.json())
+      .then(data => {
+          alert(data.message);
+          location.reload();  // Refresh the page to remove the deleted user from the table
+      })
+      .catch(error => console.error('Error:', error));
+  }
+}
+
 
 
 
@@ -211,22 +289,29 @@ function deleteUser(username) {
 }
 
 // Real-time recognition functionality with camera access
-document.getElementById("startRecognition").addEventListener("click", () => {
-  const video = document.getElementById("video");
+document.addEventListener("DOMContentLoaded", () => {
+  const startRecognitionButton = document.getElementById("startRecognition");
+  if (startRecognitionButton) {
+    startRecognitionButton.addEventListener("click", () => {
+      const video = document.getElementById("video");
 
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        console.error("Error accessing camera: ", err);
-        alert("Camera access denied. Please allow camera permissions.");
-      });
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(stream => {
+            video.srcObject = stream;
+            console.log("Camera access granted.");
+          })
+          .catch(err => {
+            console.error("Error accessing camera:", err);
+            alert("Camera access denied. Please allow camera permissions.");
+          });
+      } else {
+        alert("Your browser does not support camera access.");
+      }
+    });
   } else {
-    alert("Your browser does not support camera access.");
+    console.warn("startRecognition button not found in the DOM.");
   }
-  
 });
 
 // Call the function when the page loads

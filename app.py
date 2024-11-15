@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 import tensorflow as tf
-from flask import Flask, request, jsonify, session, abort, redirect, render_template
+from flask import Flask, flash, request, jsonify, session, abort, redirect, render_template
 from flask_mail import Mail, Message
 from datetime import datetime
 from functools import wraps
@@ -13,13 +13,37 @@ from flask import Flask, request, render_template, redirect, session, url_for
 import sqlite3
 from datetime import datetime
 
+# Set up Flask application and database configuration
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Required for session handling
 
-# Ensure database path consistency
-DATABASE_PATH = 'inmate_database.db'
+# SQLAlchemy configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/Nicholas Eke/Desktop/Heimdall-project/your_database.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
+# Folder to store uploaded images
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
+   
+  
+
+class User(db.Model):
+    __tablename__ = 'users'  # Table name for the User model
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(120), nullable=False)
+    role = db.Column(db.String(20), nullable=False)  # Role-based access like 'admin' or 'user'
+    status = db.Column(db.String(20), nullable=False, default='active')  # Status: 'active' or 'suspended'
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+    
+    # Initialize database and create tables if they don't exist
+with app.app_context():
+    db.create_all()
 
 # Database setup: Creates tables if they don't exist
 def init_db():
@@ -118,6 +142,23 @@ def login():
         print("User not found.")  # Debugging print
         return jsonify({'error': 'Invalid credentials'}), 401
 
+# Admin route to display the admin dashboard
+@app.route('/admin-dashboard')
+def admin_dashboard():
+    if not is_default_admin():  # Check if the user is the default admin
+        return redirect(url_for('login'))  # Redirect to login if not the default admin
+
+    # Retrieve all users to display on the admin dashboard
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, role, status FROM users WHERE role != 'admin'")
+    users = [{'username': row[0], 'role': row[1], 'status': row[2]} for row in cursor.fetchall()]
+    conn.close()
+
+    # Render the admin dashboard template, passing in the users list
+    return render_template('admin_dashboard.html', users=users)
+
+
 # Register a new user with hashed password
 @app.route('/register_user', methods=['POST'])
 def register_user():
@@ -158,32 +199,167 @@ def get_users():
     return jsonify(users), 200
 
 
-# Admin route to perform actions on users (e.g., delete, suspend)
-@app.route('/admin/user_action', methods=['POST'])
-def user_action():
-    if not is_default_admin():
-        return jsonify({'error': 'Access denied'}), 403
+# Function to retrieve a user by username
+def get_user_by_username(username):
+    try:
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        user_data = cursor.fetchone()
+        if user_data:
+            # Adjust as necessary to match column order in your database
+            user = {
+                "id": user_data[0],
+                "username": user_data[1],
+                "password": user_data[2],
+                "role": user_data[3],
+                "status": user_data[4]
+            }
+            return user
+        return None
+    except sqlite3.Error as e:
+        print("Database error:", e)
+        return None
+    finally:
+        conn.close()
 
+# Function to update user information in the database
+def update_user_in_database(username, new_username, new_password):
+    try:
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+
+        # Check if we need to update both username and password
+        if new_username and new_password:
+            hashed_password = generate_password_hash(new_password)
+            cursor.execute(
+                "UPDATE users SET username = ?, password = ? WHERE username = ?",
+                (new_username, hashed_password, username)
+            )
+        elif new_username:
+            cursor.execute(
+                "UPDATE users SET username = ? WHERE username = ?",
+                (new_username, username)
+            )
+        elif new_password:
+            hashed_password = generate_password_hash(new_password)
+            cursor.execute(
+                "UPDATE users SET password = ? WHERE username = ?",
+                (hashed_password, username)
+            )
+        else:
+            return False  # No update made if no new values are provided
+
+        conn.commit()
+        return cursor.rowcount > 0  # Returns True if the update was successful
+    except sqlite3.Error as e:
+        print("Database error:", e)
+        return False
+    finally:
+        conn.close()
+
+
+@app.route('/admin/get_user/<string:username>', methods=['GET'])
+def get_user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    return jsonify(username=user.username, role=user.role)
+
+
+# Admin route to display the edit user page
+@app.route('/admin/edit_user/<string:username>', methods=['GET', 'POST'])
+def edit_user(username):
+     # Print all users to verify database connectivity
+    users = User.query.all()
+    print("All users in database:", users)
+    # Fetch the user by username or return a 404 error if not found
+    user = User.query.filter_by(username=username).first_or_404()
+    print(user)
+
+    if request.method == 'POST':
+        # Fetch updated data from the form
+        new_username = request.form.get('username')
+        new_password = request.form.get('password')
+        new_role = request.form.get('role')  # Assuming role is part of the form
+
+        # Update fields if they are provided
+        if new_username:
+            user.username = new_username
+        if new_password:
+            user.password = generate_password_hash(new_password)
+        if new_role:
+            user.role = new_role
+
+        # Commit changes to the database
+        db.session.commit()
+        flash(f'User {user.username} has been updated successfully.', 'success')
+        
+        # Redirect to the admin dashboard
+        return redirect(url_for('admin_dashboard'))  # Replace 'admin_dashboard' with the actual route name for the dashboard
+
+    # Render the edit user template if the method is GET
+    return render_template('edit_user.html', user=user)
+
+
+@app.route('/admin/update_user/<string:username>', methods=['POST'])
+def modify_user(username):
+    user = User.query.filter_by(username=username).first_or_404()
     data = request.get_json()
-    username = data.get('username')
-    action = data.get('action')  # 'edit', 'suspend', or 'delete'
+    if "role" in data:
+        user.role = data["role"]
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-    if action == 'delete':
-        cursor.execute("DELETE FROM users WHERE username = ?", (username,))
-    elif action == 'suspend':
-        cursor.execute("UPDATE users SET status = 'suspended' WHERE username = ?", (username,))
-    conn.commit()
-    conn.close()
-    return jsonify({'message': f'User {username} {action}d successfully.'})
+    db.session.commit()
+    return jsonify({"message": f"User {user.username} updated successfully."})
 
+
+# Admin route to update user information
+@app.route('/admin/update_user', methods=['POST'])
+def update_user():
+    data = request.json
+    username = data.get("username")
+    new_username = data.get("new_username")
+    new_password = data.get("new_password")
+
+    # Perform the update in the database
+    success = update_user_in_database(username, new_username, new_password)
+    if success:
+        return jsonify({"message": "User updated successfully"})
+    else:
+        return jsonify({"error": "Failed to update user"}), 400
+
+@app.route('/admin/suspend_user/<int:user_id>', methods=['POST'])
+def suspend_user(user_id):
+    user = User.query.get(user_id)
+    if user:
+        user.status = 'suspended' if user.status == 'active' else 'active'  # Toggle status
+        db.session.commit()
+        status_message = "suspended" if user.status == 'suspended' else "active"
+        return jsonify({"message": f"User {status_message} successfully"}), 200
+    return jsonify({"error": "User not found"}), 404
+
+@app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"message": "User deleted successfully"}), 200
+    return jsonify({"error": "User not found"}), 404
 
 
 # Route to serve the main page
 @app.route('/')
 def index():
-    return render_template('index.html')
+    username = request.args.get('username')  # Get 'username' from query parameters
+    
+    user = None  # Default to None if no user is found
+    if username:
+        user = get_user_by_username(username)  # Attempt to fetch user by username
+    
+    return render_template('index.html', user=user)  # Pass user (either valid or None)
+
+def get_user_by_username(username):
+    return User.query.filter_by(username=username).first()  # Example query to fetch user by username
+
 
 # Initialize database and create default admin
 if __name__ == '__main__':
