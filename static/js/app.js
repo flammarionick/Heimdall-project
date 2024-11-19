@@ -239,21 +239,52 @@ function deleteUser(userId) {
 // Handle inmate registration form submission
 document.getElementById("inmateForm").addEventListener("submit", async function (e) {
   e.preventDefault();
-  let formData = new FormData(this);
+  const formData = new FormData(this);
 
   try {
-    const response = await fetch('/register', {
-      method: 'POST',
-      body: formData
-    });
+      const response = await fetch('/register_inmate', {
+          method: 'POST',
+          body: formData,
+      });
 
-    const result = await response.text();
-    alert(result);
+      const result = await response.json();
+      if (response.ok) {
+          alert("Inmate registered successfully!");
+      } else {
+          alert("Error: " + result.error);
+      }
   } catch (error) {
-    console.error("Error during inmate registration:", error);
-    alert("Failed to register inmate.");
+      console.error("Error during inmate registration:", error);
+      alert("Failed to register inmate.");
   }
 });
+
+
+const uploadForm = document.querySelector('#uploadForm');
+uploadForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData();
+    formData.append('file', document.querySelector('#fileInput').files[0]);
+
+    try {
+        const response = await fetch('/predict', { // Adjust if hosted externally
+            method: 'POST',
+            body: formData,
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            document.querySelector('#predictionResult').textContent = `Predictions: ${JSON.stringify(result.predictions)}`;
+        } else {
+            alert(`Error: ${result.error}`);
+        }
+    } catch (error) {
+        console.error('Prediction failed:', error);
+        alert('Prediction failed: ' + error.message);
+    }
+});
+
 
 // Populate the user table in admin dashboard
 function populateUserTable() {

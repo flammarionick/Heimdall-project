@@ -57,6 +57,7 @@
         <li><a href="#admin-dashboard" onclick="showPage('admin-dashboard')">Admin Dashboard</a></li>
         <li><a href="#register-inmate" onclick="showPage('register-inmate')">Register Inmate</a></li>
         <li><a href="#real-time-recognition" onclick="showPage('real-time-recognition')">Real-Time Recognition</a></li>
+        <li><a href="#ai-recognition" onclick="showPage('ai-recognition')"> AI Recognition</a></li>
       </ul>
     </nav>
   </main>
@@ -194,26 +195,42 @@
   </main>
 
   <!-- Register Inmate Page -->
-  <main id="register-inmate" class="page" style="display: none;">
-    <section>
-      <h2>Register Inmate</h2>
-      <form id="inmateForm" onsubmit="handleInmateRegistration(event)">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" autocomplete= "additional-name" required>
-        
-        <label for="status">Status:</label>
-        <select id="status" name="status" required>
-          <option value="active">Active</option>
-          <option value="released">Released</option>
-        </select>
+<main id="register-inmate" class="page" style="display: none;">
+  <section>
+    <h2>Register Inmate</h2>
+    <form id="inmateForm" onsubmit="handleInmateRegistration(event)" enctype="multipart/form-data">
+      <!-- Name Field -->
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" autocomplete="additional-name" required>
 
-        <label for="file">Upload Face Image:</label>
-        <input type="file" id="file" name="face_image" accept="image/*" required>
+      
+      <!-- Status Field -->
+      <label for="status">Status:</label>
+      <select id="status" name="status" required>
+        <option value="active">Active</option>
+        <option value="released">Released</option>
+      </select>
 
-        <button type="submit">Submit</button>
-      </form>
-    </section>
-  </main>
+      <!-- Face Image Upload Field -->
+      <label for="file">Upload Face Image:</label>
+      <input type="file" id="file" name="face_image" accept="image/*" required>
+
+      <!-- Submit Button -->
+      <button type="submit">Submit</button>
+    </form>
+  </section>
+</main>
+
+<main id="ai-recognition" class="page" style="display: none;">
+  <h2>AI Recognition</h2>
+  <form id="uploadForm">
+      <label for="fileInput">Upload Face Image:</label>
+      <input type="file" id="fileInput" name="file" accept="image/*" required>
+      <button type="submit">Submit</button>
+  </form>
+  <div id="predictionResult"></div>
+</main>
+
 
   <!-- Real-Time Recognition Page -->
   <main id="real-time-recognition" class="page" style="display: none;">

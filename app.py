@@ -12,10 +12,22 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, request, render_template, redirect, session, url_for
 import sqlite3
 from datetime import datetime
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import img_to_array, load_img
+import random
+import string
+import tensorflow as tf
+from PIL import Image
+
+
 
 # Set up Flask application and database configuration
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Required for session handling
+
+# Load the EfficientNet-B4 model
+MODEL_PATH = 'C:/Users/Nicholas Eke/Desktop/Heimdall-project/models/efficientnet_b4_finetuned.h5'
+model = load_model(MODEL_PATH)
 
 # SQLAlchemy configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/Nicholas Eke/Desktop/Heimdall-project/your_database.db'
@@ -23,12 +35,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # Folder to store uploaded images
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = 'static/uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
    
-  
+# Preprocess function
+def preprocess_image(image):
+    img = load_img(image, target_size=(380, 380))  # Match EfficientNet-B4 input size
+    img_array = img_to_array(img) / 255.0  # Normalize to [0, 1]
+    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+    return img_array
+
 
 class User(db.Model):
     __tablename__ = 'users'  # Table name for the User model
@@ -183,6 +201,82 @@ def register_user():
     conn.commit()
     conn.close()
     return jsonify({'message': f"User {username} registered successfully with ID {user_id}"}), 201
+
+
+def generate_inmate_id():
+    """Generate a unique inmate ID."""
+    prefix = "IM"  # You can change this prefix if needed
+    unique_id = ''.join(random.choices(string.digits, k=6))  # Generates a 6-digit unique ID
+    return f"{prefix}{unique_id}"
+
+@app.route('/register_inmate', methods=['POST'])
+def register_inmate():
+    try:
+        name = request.form['name']
+        status = request.form['status']
+        face_image = request.files['face_image']
+
+        # Save the face image securely
+        filename = secure_filename(face_image.filename)
+        image_path = os.path.join('static/uploads', filename)
+        face_image.save(image_path)
+
+        # Generate a unique inmate ID
+        inmate_id = generate_inmate_id()
+
+        # Insert into the database
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO inmates (name, inmate_id, status, face_image) VALUES (?, ?, ?, ?)",
+            (name, inmate_id, status, image_path),
+        )
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Inmate registered successfully!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+# AI Prediction Route
+@app.route('/predict', methods=['POST'])
+def predict():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    try:
+        # Load the image
+        image = Image.open(file)
+        
+        # Convert to grayscale
+        image = image.convert("L")  # "L" mode for grayscale
+        
+        # Resize the image to match the model's input size (96x96)
+        image = image.resize((96, 96))
+        
+        # Convert image to numpy array and normalize
+        image_array = img_to_array(image)
+        image_array = np.expand_dims(image_array, axis=-1)  # Add channel dimension
+        image_array = np.expand_dims(image_array, axis=0)   # Add batch dimension
+        image_array = image_array / 255.0  # Normalize pixel values to [0, 1]
+        
+        # Make a prediction
+        predictions = model.predict(image_array)
+        
+        # Process the prediction result
+        return jsonify({'predictions': predictions.tolist()}), 200
+
+    except Exception as e:
+        app.logger.error(f"Error processing image: {str(e)}")
+        return jsonify({'error': 'Error processing image'}), 500
+
+    
 
 # Route to retrieve all non-admin users (admin-only)
 @app.route('/admin/get_users', methods=['GET'])
