@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 import tensorflow as tf
-from flask import Flask, flash, request, jsonify, session, abort, redirect, render_template
+from flask import Flask, Response, flash, request, jsonify, session, abort, redirect, render_template
 from flask_mail import Mail, Message
 from datetime import datetime
 from functools import wraps
@@ -18,6 +18,7 @@ import random
 import string
 import tensorflow as tf
 from PIL import Image
+from scipy.spatial.distance import cosine
 
 
 
@@ -221,6 +222,15 @@ def register_inmate():
         image_path = os.path.join('static/uploads', filename)
         face_image.save(image_path)
 
+        # Load and preprocess the image
+        image = Image.open(image_path).convert("L")
+        image = image.resize((96, 96))  # Match model input size
+        image_array = img_to_array(image)
+        image_array = np.expand_dims(image_array, axis=0) / 255.0  # Normalize
+
+        # Generate the face encoding
+        face_encoding = model.predict(image_array)[0].tolist()
+
         # Generate a unique inmate ID
         inmate_id = generate_inmate_id()
 
@@ -228,11 +238,20 @@ def register_inmate():
         conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO inmates (name, inmate_id, status, face_image) VALUES (?, ?, ?, ?)",
-            (name, inmate_id, status, image_path),
+            """
+            INSERT INTO inmates (name, inmate_id, status, face_image_path, face_encoding) 
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (name, inmate_id, status, image_path, str(face_encoding)),
         )
         conn.commit()
         conn.close()
+
+        return jsonify({'success': True, 'message': 'Inmate registered successfully!'}), 200
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
         return jsonify({"message": "Inmate registered successfully!"}), 200
     except Exception as e:
@@ -243,40 +262,141 @@ def register_inmate():
 # AI Prediction Route
 @app.route('/predict', methods=['POST'])
 def predict():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-
     try:
-        # Load the image
-        image = Image.open(file)
-        
-        # Convert to grayscale
-        image = image.convert("L")  # "L" mode for grayscale
-        
-        # Resize the image to match the model's input size (96x96)
-        image = image.resize((96, 96))
-        
-        # Convert image to numpy array and normalize
+        # Check if a file is part of the request
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+
+        # Save the uploaded file
+        filename = secure_filename(file.filename)
+        file_path = os.path.join('static/uploads', filename)
+        file.save(file_path)
+
+        # Load and preprocess the image
+        image = Image.open(file_path).convert("L")
+        image = image.resize((96, 96))  # Resize to match model input size
         image_array = img_to_array(image)
-        image_array = np.expand_dims(image_array, axis=-1)  # Add channel dimension
-        image_array = np.expand_dims(image_array, axis=0)   # Add batch dimension
-        image_array = image_array / 255.0  # Normalize pixel values to [0, 1]
-        
-        # Make a prediction
-        predictions = model.predict(image_array)
-        
-        # Process the prediction result
-        return jsonify({'predictions': predictions.tolist()}), 200
+        image_array = np.expand_dims(image_array, axis=0) / 255.0  # Normalize
+
+        # Debug: Print image array shape
+        print(f"Image array shape: {image_array.shape}")
+
+        # Generate the embedding using the model
+        embedding = model.predict(image_array)[0].tolist()  # Convert prediction to list
+
+        # Debug: Print predictions
+        print(f"Predictions: {embedding}")
+
+        # Connect to the database and retrieve stored embeddings
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, face_encoding, status FROM inmates")
+        rows = cursor.fetchall()
+        conn.close()
+
+        # Initialize variables to find the closest match
+        min_distance = float('inf')
+        best_match = None
+
+        # Compare embedding with stored embeddings
+        for row in rows:
+            inmate_id, name, face_encoding, status = row
+            stored_embedding = np.array(eval(face_encoding))  # Convert string back to array
+            distance = cosine(embedding, stored_embedding)  # Calculate cosine similarity
+
+            # Debug: Print distance for each comparison
+            print(f"Comparing with {name}: Distance = {distance}")
+
+            # Find the closest match
+            if distance < min_distance:
+                min_distance = distance
+                best_match = {
+                    'id': inmate_id,
+                    'name': name,
+                    'status': status,
+                    'distance': distance
+                }
+
+        # Define a similarity threshold
+        threshold = 0.5  # Adjust based on testing and model performance
+
+        if best_match and min_distance < threshold:
+            return jsonify({
+                'status': 'Match found',
+                'inmate': best_match
+            }), 200
+        else:
+            return jsonify({'status': 'No match found'}), 200
 
     except Exception as e:
-        app.logger.error(f"Error processing image: {str(e)}")
-        return jsonify({'error': 'Error processing image'}), 500
-
+        app.logger.error(f"Error during prediction: {str(e)}")
+        return jsonify({'error': f"Error processing image: {str(e)}"}), 500
     
+
+
+@app.route('/video_feed')
+def video_feed():
+    def generate_frames():
+        video = cv2.VideoCapture(0)  # Access the webcam
+        while True:
+            success, frame = video.read()
+            if not success:
+                break
+
+            # Preprocess frame (resize, convert to grayscale, etc.)
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            resized_frame = cv2.resize(gray_frame, (96, 96))
+            frame_array = np.expand_dims(resized_frame, axis=-1)
+            frame_array = np.expand_dims(frame_array, axis=0) / 255.0
+
+            # Generate embedding
+            embedding = model.predict(frame_array)[0]
+
+            # Connect to database and retrieve stored embeddings
+            conn = sqlite3.connect(DATABASE_PATH)
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, name, face_encoding FROM inmates")
+            rows = cursor.fetchall()
+            conn.close()
+
+            # Find the best match
+            min_distance = float('inf')
+            best_match = None
+            for row in rows:
+                inmate_id, name, face_encoding = row
+                stored_embedding = np.array(eval(face_encoding))  # Convert string to array
+                distance = cosine(embedding, stored_embedding)
+                if distance < min_distance:  # Find closest match
+                    min_distance = distance
+                    best_match = {
+                        'id': inmate_id,
+                        'name': name,
+                        'distance': distance
+                    }
+
+            # Define a threshold for matching
+            threshold = 0.5  # Adjust based on your model's performance
+
+            # Annotate frame with match result if a match is found
+            if best_match and min_distance < threshold:
+                text = f"Match: {best_match['name']}"
+                cv2.putText(frame, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            else:
+                cv2.putText(frame, "No Match", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+            # Encode the frame for streaming
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 
 # Route to retrieve all non-admin users (admin-only)
 @app.route('/admin/get_users', methods=['GET'])

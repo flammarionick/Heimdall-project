@@ -260,23 +260,43 @@ document.getElementById("inmateForm").addEventListener("submit", async function 
 });
 
 
-const uploadForm = document.querySelector('#uploadForm');
+const uploadForm = document.querySelector('#predictForm');
+
 uploadForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
     const formData = new FormData();
-    formData.append('file', document.querySelector('#fileInput').files[0]);
+    const fileInput = document.querySelector('#fileInput');
+    formData.append('file', fileInput.files[0]);
 
     try {
-        const response = await fetch('/predict', { // Adjust if hosted externally
+        const response = await fetch('/predict', {
             method: 'POST',
             body: formData,
         });
 
         const result = await response.json();
+
         if (response.ok) {
-            document.querySelector('#predictionResult').textContent = `Predictions: ${JSON.stringify(result.predictions)}`;
+            if (result.status === 'Match found') {
+                // Match found, display inmate details
+                const inmate = result.inmate;
+                const message = `Match Found: 
+                Name: ${inmate.name}, 
+                Status: ${inmate.status}, 
+                Distance: ${inmate.distance}`;
+                alert(message);
+                document.querySelector('#predictionResult').textContent = message;
+            } else if (result.status === 'No match found') {
+                // No match found
+                document.querySelector('#predictionResult').textContent = 'No Match Found';
+                alert('No Match Found');
+            } else {
+                // Handle unexpected statuses
+                alert('Unexpected response status: ' + result.status);
+            }
         } else {
+            // Handle errors returned from the server
             alert(`Error: ${result.error}`);
         }
     } catch (error) {
@@ -284,6 +304,8 @@ uploadForm.addEventListener('submit', async (event) => {
         alert('Prediction failed: ' + error.message);
     }
 });
+
+
 
 
 // Populate the user table in admin dashboard
@@ -319,26 +341,21 @@ function deleteUser(username) {
     });
 }
 
-// Real-time recognition functionality with camera access
 document.addEventListener("DOMContentLoaded", () => {
   const startRecognitionButton = document.getElementById("startRecognition");
+  const videoContainer = document.getElementById("recognitionResults");
+
   if (startRecognitionButton) {
     startRecognitionButton.addEventListener("click", () => {
-      const video = document.getElementById("video");
+      // Set the video element's source to the live stream from the server
+      const videoStream = document.createElement("img");
+      videoStream.id = "videoStream";
+      videoStream.src = "/video_feed"; // Fetch live video feed from the server
+      videoStream.alt = "Live Video Feed";
 
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: true })
-          .then(stream => {
-            video.srcObject = stream;
-            console.log("Camera access granted.");
-          })
-          .catch(err => {
-            console.error("Error accessing camera:", err);
-            alert("Camera access denied. Please allow camera permissions.");
-          });
-      } else {
-        alert("Your browser does not support camera access.");
-      }
+      // Clear the video container before appending the stream
+      videoContainer.innerHTML = "";
+      videoContainer.appendChild(videoStream);
     });
   } else {
     console.warn("startRecognition button not found in the DOM.");
