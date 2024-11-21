@@ -31,7 +31,7 @@ MODEL_PATH = 'C:/Users/Nicholas Eke/Desktop/Heimdall-project/models/efficientnet
 model = load_model(MODEL_PATH)
 
 # SQLAlchemy configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///C:/Users/Nicholas Eke/Desktop/Heimdall-project/your_database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///' + DATABASE_PATH)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -109,7 +109,7 @@ def is_default_admin():
 
 # Function to retrieve user role from the database
 def get_user_from_db(username, password):
-    conn = sqlite3.connect('inmate_database.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT username, role FROM users WHERE username = ? AND password = ?", (username, password))
     user = cursor.fetchone()
@@ -579,7 +579,4 @@ def get_user_by_username(username):
 if __name__ == '__main__':
     init_db()  # This should create the 'users' table and any others if not already created
     verify_or_add_admin()  # Now we can safely verify or add the default admin
-
-    # Use the environment variable PORT if available, otherwise default to 5000
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
