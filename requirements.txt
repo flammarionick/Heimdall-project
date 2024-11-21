@@ -16,3 +16,4 @@ Werkzeug==3.1.1
 tensorflow==2.18.0
 pillow
 keras==3.6.0
+gunicorn==21.2.0
