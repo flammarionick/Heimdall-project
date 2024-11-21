@@ -27,7 +27,7 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Required for session handling
 
 # Load the EfficientNet-B4 model
-MODEL_PATH = 'C:/Users/Nicholas Eke/Desktop/Heimdall-project/models/efficientnet_b4_finetuned.h5'
+MODEL_PATH = 'models/efficientnet_b4_finetuned.h5'  # Correct relative path
 model = load_model(MODEL_PATH)
 
 # SQLAlchemy configuration
