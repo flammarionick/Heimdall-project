@@ -30,6 +30,12 @@ app.secret_key = 'your_secret_key'  # Required for session handling
 MODEL_PATH = 'models/efficientnet_b4_finetuned.h5'  # Correct relative path
 model = load_model(MODEL_PATH)
 
+import os
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DATABASE_PATH = os.path.join(BASE_DIR, 'inmate_database.db')  # Replace 'database.db' with your database file name
+
+
 # SQLAlchemy configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///' + DATABASE_PATH)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
