@@ -260,6 +260,35 @@ document.getElementById("inmateForm").addEventListener("submit", async function 
 });
 
 
+const video = document.querySelector('video');
+const canvas = document.createElement('canvas');
+const context = canvas.getContext('2d');
+
+navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+        video.srcObject = stream;
+        video.play();
+    })
+    .catch(err => console.error("Error accessing camera:", err));
+
+function sendFrame() {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const frame = canvas.toDataURL('image/jpeg');
+    fetch('/process_frame', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ frame }),
+    })
+    .then(response => response.json())
+    .then(data => console.log("Frame processed:", data))
+    .catch(err => console.error("Error sending frame:", err));
+}
+
+setInterval(sendFrame, 100); // Send a frame every 100ms
+
+
 const uploadForm = document.querySelector('#predictForm');
 
 uploadForm.addEventListener('submit', async (event) => {
