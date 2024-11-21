@@ -19,7 +19,6 @@ import string
 import tensorflow as tf
 from PIL import Image
 from scipy.spatial.distance import cosine
-import base64
 
 
 
@@ -265,106 +264,6 @@ def register_inmate():
         return jsonify({"error": str(e)}), 500
 
 
-def decode_base64_image(base64_string):
-    # Remove the data:image/...;base64, prefix
-    base64_data = base64_string.split(',')[1]
-    # Decode the Base64 string
-    image_data = base64.b64decode(base64_data)
-    # Convert the decoded data to a numpy array
-    np_array = np.frombuffer(image_data, dtype=np.uint8)
-    # Decode the numpy array as an OpenCV image
-    image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
-    return image
-
-
-def recognize_face(image):
-    try:
-        # Convert OpenCV image (BGR) to PIL Image (Grayscale)
-        pil_image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
-
-        # Resize to match model input size
-        pil_image = pil_image.resize((96, 96))
-
-        # Convert PIL Image to array and normalize
-        image_array = img_to_array(pil_image)
-        image_array = np.expand_dims(image_array, axis=0) / 255.0  # Normalize to [0, 1]
-
-        # Debug: Print image array shape
-        print(f"Image array shape: {image_array.shape}")
-
-        # Generate the embedding using the model
-        embedding = model.predict(image_array)[0].tolist()  # Convert prediction to list
-
-        # Debug: Print predictions
-        print(f"Predictions: {embedding}")
-
-        # Connect to the database and retrieve stored embeddings
-        conn = sqlite3.connect(DATABASE_PATH)
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, name, face_encoding, status FROM inmates")
-        rows = cursor.fetchall()
-        conn.close()
-
-        # Initialize variables to find the closest match
-        min_distance = float('inf')
-        best_match = None
-
-        # Compare embedding with stored embeddings
-        for row in rows:
-            inmate_id, name, face_encoding, status = row
-            stored_embedding = np.array(eval(face_encoding))  # Convert string back to array
-            distance = cosine(embedding, stored_embedding)  # Calculate cosine similarity
-
-            # Debug: Print distance for each comparison
-            print(f"Comparing with {name}: Distance = {distance}")
-
-            # Find the closest match
-            if distance < min_distance:
-                min_distance = distance
-                best_match = {
-                    'id': inmate_id,
-                    'name': name,
-                    'status': status,
-                    'distance': distance
-                }
-
-        # Define a similarity threshold
-        threshold = 0.5  # Adjust based on testing and model performance
-
-        if best_match and min_distance < threshold:
-            return {
-                'status': 'Match found',
-                'inmate': best_match
-            }
-        else:
-            return {
-                'status': 'No match found'
-            }
-
-    except Exception as e:
-        # Log and handle the error
-        print(f"Error during recognition: {str(e)}")
-        return {
-            'error': f"Error processing image: {str(e)}"
-        }
-    
-
-
-@app.route('/process_frame', methods=['POST'])
-def process_frame():
-    data = request.get_json()
-    frame_data = data.get('frame')
-    if frame_data:
-        try:
-            # Decode the frame
-            frame = decode_base64_image(frame_data)
-
-            # Perform face recognition
-            result = recognize_face(frame)
-            return jsonify(result)
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    return jsonify({"error": "No frame data received"}), 400
 
 
 # AI Prediction Route
