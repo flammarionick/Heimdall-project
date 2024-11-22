@@ -61,7 +61,7 @@ flask run
 The application will be accessible at http://127.0.0.1:5000.
 
 Step 7: Testing the AI Functionality
-To test the AI functionality, ensure you have the model and data files:
+To test the AI functionality, ensure you have the model and data files which you can download in the models folder of this repository
 
 Place your AI model file in the models directory.
 Ensure the file paths for datasets are correctly configured in your code.
