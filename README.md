@@ -1,7 +1,9 @@
 HEIMDALL PROJECT
+
 A real-time facial recognition and criminal detection system designed to improve security at high-risk locations.
 
 FEATURES
+
 Real-time facial recognition using live camera feeds.
 Secure admin and user management system.
 Inmate database with profile management.
@@ -14,9 +16,11 @@ Note:
 Due to time and financial constraints, I was not able to find a free deployment platform that could support the large AI model. As a result, the AI functionality does not work on the public URL. However, you can set it up locally to experience the full functionality.
 
 GETTING STARTED
+
 Follow these steps to set up the project locally and explore its features.
 
 PREREQUISITES
+
 Python 3.10 or higher installed on your system.
 Git installed on your system.
 A virtual environment tool (e.g., venv or virtualenv).
@@ -24,13 +28,16 @@ Required Python packages listed in requirements.txt.
 A supported browser for viewing the web application.
 
 SETUP INSTRUCTIONS
+
 Step 1: Clone the Repository
 
 git clone https://github.com/FLAMMARYON/Heimdall-project.git
 
 
 Step 2: Set Up a Virtual Environment
+
 Create and activate a virtual environment to manage dependencies:
+
 python -m venv venv
 venv\Scripts\activate
 
@@ -47,6 +54,7 @@ If it does not exist, create it by running the Flask app.
 
 Environment Variables:
 Create a .env file in the project root and set the following variables:
+
 FLASK_APP=app.py
 FLASK_ENV=development
 SECRET_KEY=your_secret_key_here
