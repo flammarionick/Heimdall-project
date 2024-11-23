@@ -219,33 +219,45 @@ def generate_inmate_id():
 @app.route('/register_inmate', methods=['POST'])
 def register_inmate():
     try:
-        name = request.form['name']
-        status = request.form['status']
-        face_image = request.files['face_image']
+        # Extract form data
+        name = request.form.get('name')
+        status = request.form.get('status')
+        face_image = request.files.get('face_image')
 
-        # Save the face image securely
+        if not name or not status or not face_image:
+            return jsonify({'success': False, 'message': 'All fields are required!'}), 400
+
+        # Validate file type
+        if not face_image.content_type.startswith('image/'):
+            return jsonify({'success': False, 'message': 'Uploaded file must be an image!'}), 400
+
+        # Save face image
         filename = secure_filename(face_image.filename)
-        image_path = os.path.join('static/uploads', filename)
+        uploads_dir = os.path.join('static', 'uploads')
+        if not os.path.exists(uploads_dir):
+            os.makedirs(uploads_dir)
+
+        image_path = os.path.join(uploads_dir, filename)
         face_image.save(image_path)
 
-        # Load and preprocess the image
+        # Preprocess image
         image = Image.open(image_path).convert("L")
         image = image.resize((96, 96))  # Match model input size
         image_array = img_to_array(image)
         image_array = np.expand_dims(image_array, axis=0) / 255.0  # Normalize
 
-        # Generate the face encoding
+        # Generate face encoding
         face_encoding = model.predict(image_array)[0].tolist()
 
-        # Generate a unique inmate ID
+        # Generate unique inmate ID
         inmate_id = generate_inmate_id()
 
-        # Insert into the database
+        # Insert data into database
         conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute(
             """
-            INSERT INTO inmates (name, inmate_id, status, face_image_path, face_encoding) 
+            INSERT INTO inmates (name, inmate_id, status, face_image, face_encoding) 
             VALUES (?, ?, ?, ?, ?)
             """,
             (name, inmate_id, status, image_path, str(face_encoding)),
@@ -256,12 +268,11 @@ def register_inmate():
         return jsonify({'success': True, 'message': 'Inmate registered successfully!'}), 200
 
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        print(f"Error registering inmate: {e}")
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
 
 
-        return jsonify({"message": "Inmate registered successfully!"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+       
 
 
 
