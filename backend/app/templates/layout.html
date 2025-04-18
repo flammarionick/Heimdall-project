@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Heimdall{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>👁️ Heimdall</h1>
+        {% if current_user.is_authenticated %}
+            <p>Welcome, {{ current_user.username }} | <a href="{{ url_for('auth.logout') }}">Logout</a></p>
+        {% endif %}
+    </header>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; {{ 2025 }} Heimdall Project</p>
+    </footer>
+</body>
+</html>
