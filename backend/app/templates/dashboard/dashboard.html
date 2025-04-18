@@ -4,14 +4,10 @@
 
 {% block content %}
 <h2>Live Monitoring Dashboard</h2>
-
 <p>Welcome, {{ current_user.username }}!</p>
 
 <div>
-    <!-- Example placeholder for camera feed preview -->
-    <div style="border:1px solid #ccc; padding:10px; margin-top:20px;">
-        <p><strong>Camera 1:</strong> Live feed preview here...</p>
-        <img src="{{ url_for('static', filename='placeholder_camera.jpg') }}" alt="Live Feed" width="400">
-    </div>
+    <img src="{{ url_for('dashboard.video_feed') }}" width="640" height="480">
 </div>
 {% endblock %}
+
