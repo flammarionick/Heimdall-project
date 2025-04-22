@@ -1,32 +1,55 @@
-from flask import Blueprint, render_template, Response
+from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
+from sqlalchemy import func
+from datetime import datetime, timedelta
+from app.models.alert import Alert
+import base64
 import cv2
+import numpy as np
 
 dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
-# Use your webcam (0) or change to IP stream
-camera = cv2.VideoCapture(0)
-
-def gen_frames():
-    while True:
-        success, frame = camera.read()
-        if not success:
-            break
-        else:
-            # Encode frame as JPEG
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-
-            # Yield frame in byte format
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+# 📍 This is now handled in frontend JS — OpenCV should not grab webcam here
 
 @dashboard_bp.route('/')
 @login_required
 def view_dashboard():
     return render_template('dashboard/dashboard.html')
 
-@dashboard_bp.route('/video_feed')
+
+@dashboard_bp.route('/analytics')
 @login_required
-def video_feed():
-    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+def dashboard_analytics():
+    return render_template('dashboard/analytics.html')
+
+
+@dashboard_bp.route('/api/analytics')
+@login_required
+def analytics_data():
+    total_alerts = Alert.query.count()
+    unique_inmates = db.session.query(Alert.inmate_id).distinct().count()
+
+    alerts_by_camera = db.session.query(
+        Alert.camera_id, func.count(Alert.id)
+    ).group_by(Alert.camera_id).all()
+    camera_data = [{"camera_id": cam_id, "count": count} for cam_id, count in alerts_by_camera]
+
+    today = datetime.utcnow()
+    last_7_days = [today - timedelta(days=i) for i in range(6, -1, -1)]
+    daily_data = []
+    for day in last_7_days:
+        next_day = day + timedelta(days=1)
+        count = Alert.query.filter(Alert.timestamp >= day, Alert.timestamp < next_day).count()
+        daily_data.append({
+            "date": day.strftime("%b %d"),
+            "count": count
+        })
+
+    return jsonify({
+        "total_alerts": total_alerts,
+        "unique_faces": unique_inmates,
+        "daily_data": daily_data,
+        "camera_data": camera_data
+    })
+
+

@@ -1,0 +1,53 @@
+{% extends 'layout.html' %}
+
+{% block title %}Analytics – Heimdall{% endblock %}
+
+{% block content %}
+<h2>📊 System Analytics</h2>
+<div class="stats-grid">
+  <div class="stat-box">Total Alerts: <span id="alert-count">0</span></div>
+  <div class="stat-box">Unique Individuals: <span id="unique-count">0</span></div>
+</div>
+
+<div class="chart-grid">
+  <canvas id="activityChart" height="100"></canvas>
+  <canvas id="cameraChart" height="100"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+fetch("/dashboard/api/analytics")
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("alert-count").textContent = data.total_alerts;
+    document.getElementById("unique-count").textContent = data.unique_faces;
+
+    new Chart(document.getElementById("activityChart"), {
+      type: 'line',
+      data: {
+        labels: data.daily_data.map(d => d.date),
+        datasets: [{
+          label: 'Alerts in Last 7 Days',
+          data: data.daily_data.map(d => d.count),
+          backgroundColor: 'rgba(54, 162, 235, 0.3)',
+          borderColor: 'rgb(54, 162, 235)',
+          fill: true,
+          tension: 0.4
+        }]
+      }
+    });
+
+    new Chart(document.getElementById("cameraChart"), {
+      type: 'doughnut',
+      data: {
+        labels: data.camera_data.map(d => 'Camera ' + d.camera_id),
+        datasets: [{
+          label: 'Alerts by Camera',
+          data: data.camera_data.map(d => d.count),
+          backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545']
+        }]
+      }
+    });
+  });
+</script>
+{% endblock %}

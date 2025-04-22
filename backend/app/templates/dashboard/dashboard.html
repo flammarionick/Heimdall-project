@@ -1,13 +1,70 @@
 {% extends 'layout.html' %}
-
-{% block title %}Dashboard – Heimdall{% endblock %}
+{% block title %}Live Monitoring – Heimdall{% endblock %}
 
 {% block content %}
-<h2>Live Monitoring Dashboard</h2>
-<p>Welcome, {{ current_user.username }}!</p>
+<h2>Live Monitoring</h2>
 
-<div>
-    <img src="{{ url_for('dashboard.video_feed') }}" width="640" height="480">
+<div class="camera-grid">
+  <div class="camera-tile">
+    <span class="label">Camera 1 (This Device)</span>
+    <video id="webcam" autoplay playsinline width="100%" height="auto"></video>
+    <button onclick="captureAndSend()">📸 Capture Frame</button>
+  </div>
+  <div class="camera-tile">
+    <span class="label">Camera 2</span>
+    <p>Feed Not Available</p>
+  </div>
+  <div class="camera-tile">
+    <span class="label">Camera 3</span>
+    <p>Feed Not Available</p>
+  </div>
+  <div class="camera-tile">
+    <span class="label">Camera 4</span>
+    <p>Feed Not Available</p>
+  </div>
 </div>
+<canvas id="snapshot" style="display:none;"></canvas>
+
+<script>
+const video = document.getElementById('webcam');
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => {
+    video.srcObject = stream;
+  })
+  .catch(err => {
+    alert("Camera access denied or not available.");
+    console.error("getUserMedia error:", err);
+  });
+
+function captureAndSend() {
+  const canvas = document.getElementById('snapshot');
+  const context = canvas.getContext('2d');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  // Draw the current video frame to the canvas
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  // Convert canvas to base64 JPEG
+  const imageData = canvas.toDataURL('image/jpeg');
+
+  fetch('/api/recognize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: imageData })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("Recognition Result:", data);
+    alert(data.message || "Face processed.");
+  })
+  .catch(err => {
+    console.error("Send error:", err);
+  });
+}
+</script>
+
 {% endblock %}
+
+
 
