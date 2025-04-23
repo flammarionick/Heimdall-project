@@ -919,3 +919,31 @@ body {
   cursor: pointer;
   align-self: flex-start;
 }
+
+.settings-form {
+  max-width: 400px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.settings-form label {
+  font-weight: bold;
+}
+
+.settings-form input[type="text"],
+.settings-form input[type="email"] {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.settings-form input[type="submit"] {
+  padding: 10px;
+  background-color: #1f1f2e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}

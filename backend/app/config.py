@@ -1,14 +1,12 @@
 # backend/app/config.py
 import os
 
-class BaseConfig:
-    SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-key")
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+class DevelopmentConfig:
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'super-secret-key'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, '../migrations/heimdall.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-class DevelopmentConfig(BaseConfig):
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///dev.db")
-    DEBUG = True
-
-class ProductionConfig(BaseConfig):
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
-    DEBUG = False
+class ProductionConfig(DevelopmentConfig):
+    pass
