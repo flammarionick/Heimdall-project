@@ -32,6 +32,9 @@ def create_app():
     from .routes.settings import settings_bp
     from .routes.api import api_bp
     from app.routes.settings import settings_bp
+    
+    
+
 
 
     
