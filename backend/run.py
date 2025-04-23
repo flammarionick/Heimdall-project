@@ -1,7 +1,11 @@
 # backend/run.py
-from app import create_app, db
-from flask_migrate import Migrate
+from flask_socketio import SocketIO
+from app import create_app
 
 app = create_app()
-migrate = Migrate(app, db)
+socketio = SocketIO(app, cors_allowed_origins="*")  # allows frontend connection
+
+if __name__ == '__main__':
+    socketio.run(app, debug=True)
+
 
