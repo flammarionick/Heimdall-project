@@ -46,6 +46,5 @@ def create_app():
     app.register_blueprint(settings_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(api_camera)
-    
     socketio.init_app(app)
     return app

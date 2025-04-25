@@ -1,0 +1,28 @@
+<!-- test_alerts.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Socket.IO Alert Test</title>
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>Listening for Alerts...</h1>
+  <ul id="alerts"></ul>
+
+  <script>
+    const socket = io("http://localhost:5000");
+
+    socket.on("connect", () => {
+      console.log("Connected to backend via Socket.IO");
+    });
+
+    socket.on("new_alert", (data) => {
+      console.log("Received alert:", data);
+      const li = document.createElement("li");
+      li.innerText = `${data.timestamp}: [${data.level}] ${data.message}`;
+      document.getElementById("alerts").appendChild(li);
+    });
+  </script>
+</body>
+</html>
