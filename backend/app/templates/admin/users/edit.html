@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Edit User</h1>
+
+<form method="POST" class="space-y-4 max-w-lg">
+    <div>
+        <label class="block">Username:</label>
+        <input type="text" name="username" value="{{ user.username }}" required class="w-full border px-3 py-2" title="Enter your username" placeholder="Username">
+    </div>
+    <div>
+        <label class="block">Email:</label>
+        <input type="email" name="email" value="{{ user.email }}" required class="w-full border px-3 py-2" title="Enter your email address" placeholder="Email address">
+    </div>
+    <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded">Update User</button>
+</form>
+{% endblock %}

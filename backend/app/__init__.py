@@ -36,9 +36,11 @@ def create_app():
     from .routes.api import api_bp
     from app.routes.settings import settings_bp
     from app.routes.api.camera_routes import api_camera
-    
+    from app.routes.admin_users import admin_users_bp
+
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(admin_users_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(inmate_bp)
     app.register_blueprint(camera_bp)
