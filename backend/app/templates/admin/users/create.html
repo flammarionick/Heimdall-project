@@ -1,24 +1,32 @@
-{% extends "base.html" %}
-{% block content %}
-<h1 class="text-2xl font-bold mb-6">Create New User</h1>
+{% extends 'base.html' %}
 
-<form method="POST" class="space-y-4 max-w-lg">
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Create New User</h1>
+
+<form method="POST" class="space-y-4">
     <div>
-        <label class="block">Username:</label>
-        <input type="text" name="username" required class="w-full border px-3 py-2" placeholder="Enter your username" title="Username">
+        <label for="username" class="block font-medium">Username</label>
+        <input type="text" id="username" name="username" placeholder="Enter username" title="Username" class="border rounded w-full p-2" required>
     </div>
+
     <div>
-        <label class="block">Email:</label>
-        <input type="email" name="email" required class="w-full border px-3 py-2" placeholder="Enter your email" title="Email">
+        <label for="email" class="block font-medium">Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter email" title="Email Address" class="border rounded w-full p-2" required>
     </div>
+
     <div>
-        <label class="block">Password:</label>
-        <input type="password" name="password" required class="w-full border px-3 py-2" placeholder="Enter your password" title="Password">
+        <label for="password" class="block font-medium">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter password" title="Password" class="border rounded w-full p-2" required>
     </div>
-    <div class="flex items-center">
-        <input type="checkbox" name="is_admin" id="is_admin" class="mr-2">
-        <label for="is_admin">Is Admin?</label>
+
+    <div>
+        <label for="role" class="block font-medium">Role</label>
+        <select id="role" name="role" title="Role" class="border rounded w-full p-2">
+            <option value="user" selected>User</option>
+            <option value="admin">Admin</option>
+        </select>
     </div>
-    <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded">Create User</button>
+
+    <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Create User</button>
 </form>
 {% endblock %}
