@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Register New Inmate</h1>
+
+<form method="POST" enctype="multipart/form-data" class="space-y-4 max-w-lg">
+    <div>
+        <label class="block">Full Name:</label>
+        <input type="text" name="full_name" required class="w-full border px-3 py-2" title="Enter the full name of the inmate" placeholder="Enter full name">
+    </div>
+    <div>
+        <label class="block">Prison ID / Reference Number:</label>
+        <input type="text" name="prison_id" required class="w-full border px-3 py-2" title="Enter the prison ID or reference number" placeholder="Enter prison ID or reference number">
+    </div>
+    <div>
+        <label class="block">Mugshot (Image Upload):</label>
+        <input type="file" name="mugshot" accept="image/*" required class="w-full border px-3 py-2" title="Upload a mugshot image" placeholder="Choose an image file">
+    </div>
+    <div>
+        <label class="block">Duration (in months):</label>
+        <input type="number" name="duration_months" placeholder="Enter duration in months" required class="w-full border px-3 py-2">
+    </div>
+    <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded">Register Inmate</button>
+</form>
+{% endblock %}
