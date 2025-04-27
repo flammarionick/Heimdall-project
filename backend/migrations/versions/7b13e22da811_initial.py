@@ -1,8 +1,8 @@
-"""Initial full database structure
+"""Initial
 
-Revision ID: 3b058fac44d3
+Revision ID: 7b13e22da811
 Revises: 
-Create Date: 2025-04-27 12:29:23.971115
+Create Date: 2025-04-27 19:12:42.651324
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '3b058fac44d3'
+revision = '7b13e22da811'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,11 +31,12 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('username', sa.String(length=150), nullable=False),
     sa.Column('email', sa.String(length=150), nullable=False),
-    sa.Column('password_hash', sa.String(length=256), nullable=False),
-    sa.Column('role', sa.String(length=50), nullable=True),
-    sa.Column('suspended', sa.Boolean(), nullable=True),
+    sa.Column('password_hash', sa.String(length=128), nullable=False),
+    sa.Column('is_admin', sa.Boolean(), nullable=True),
+    sa.Column('is_suspended', sa.Boolean(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email')
+    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('username')
     )
     op.create_table('camera',
     sa.Column('id', sa.Integer(), nullable=False),

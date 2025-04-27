@@ -14,6 +14,7 @@ dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 @dashboard_bp.route('/')
 @login_required
 def view_dashboard():
+    print(f"Dashboard: current_user.is_authenticated = {current_user.is_authenticated}")
     return render_template('dashboard/dashboard.html')
 
 

@@ -6,15 +6,25 @@
 {% block content %}
 <div style="max-width: 400px; margin: 100px auto;">
   <h2>Login</h2>
-  <form method="POST">
-    <label>Username</label>
-    <input type="text" name="username" required>
 
-    <label>Password</label>
-    <input type="password" name="password" required>
+  <form method="POST" action="{{ url_for('auth.login') }}" autocomplete="off">
 
-    <input type="submit" value="Login">
+    {{ form.hidden_tag() }}
+  
+    <div>
+      <label for="username">Username</label>
+      {{ form.username(class="form-control", placeholder="Enter your username") }}
+    </div>
+  
+    <div>
+      <label for="password">Password</label>
+      {{ form.password(class="form-control", placeholder="Enter your password") }}
+    </div>
+  
+    <div>
+      {{ form.submit(class="btn btn-primary") }}
+    </div>
   </form>
+  
 </div>
 {% endblock %}
-
