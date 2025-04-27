@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Live Recognition</h1>
+
+<div class="border rounded-lg p-4 flex flex-col items-center">
+    <video id="liveVideo" autoplay muted playsinline class="w-full max-w-lg mb-4 border"></video>
+
+    <div id="matchResult" class="text-center mt-4 hidden">
+        <h2 class="text-2xl font-semibold text-green-600 mb-2">MATCH FOUND!</h2>
+        <p id="inmateInfo" class="text-lg"></p>
+    </div>
+</div>
+
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script>
+    const socket = io();
+
+    socket.on('recognition_match', (data) => {
+        const matchDiv = document.getElementById('matchResult');
+        const inmateInfo = document.getElementById('inmateInfo');
+        
+        inmateInfo.innerText = `Name: ${data.full_name} | Location: ${data.camera_location}`;
+        matchDiv.classList.remove('hidden');
+
+        // Play siren
+        const audio = new Audio('/static/sounds/siren.mp3');
+        audio.play();
+    });
+</script>
+
+{% endblock %}

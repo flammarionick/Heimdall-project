@@ -25,3 +25,9 @@ def upload_recognition():
         return redirect(url_for('recognition.upload_recognition'))
 
     return render_template('recognition/upload.html')
+
+@recognition_bp.route('/live')
+@login_required
+def live_recognition():
+    return render_template('recognition/live.html')
+
