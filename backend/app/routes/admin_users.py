@@ -5,6 +5,7 @@ from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from app.models.user import User
 from app import db
+from app.forms import UserForm
 
 admin_users_bp = Blueprint('admin_users', __name__, url_prefix='/admin/users')
 
@@ -82,12 +83,13 @@ def delete_user(user_id):
 @admin_required
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
-
-    if request.method == 'POST':
-        user.username = request.form['username']
-        user.email = request.form['email']
+    form = UserForm(obj=user)
+    if form.validate_on_submit():
+        user.username = form.username.data
+        user.email = form.email.data
+        user.is_admin = form.is_admin.data
         db.session.commit()
         flash('User updated successfully.', 'success')
         return redirect(url_for('admin_users.list_users'))
-    
-    return render_template('admin/users/edit.html', user=user)
+
+    return render_template('admin/users/edit.html', form=form)

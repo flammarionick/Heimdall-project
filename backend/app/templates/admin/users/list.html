@@ -1,9 +1,9 @@
-{% extends 'base.html' %}
+{% extends 'layout.html' %}
 
 {% block content %}
 <h1 class="text-2xl font-bold mb-4">Manage Users</h1>
 
-<a href="{{ url_for('admin_user.create_user') }}" class="bg-blue-500 text-white px-4 py-2 rounded">Create New User</a>
+<a href="{{ url_for('admin_users.create_user') }}" class="bg-blue-500 text-white px-4 py-2 rounded">Create New User</a>
 
 <table class="table-auto w-full mt-6">
     <thead>
@@ -20,21 +20,28 @@
         <tr>
             <td class="border px-4 py-2">{{ user.username }}</td>
             <td class="border px-4 py-2">{{ user.email }}</td>
-            <td class="border px-4 py-2">{{ user.role }}</td>
             <td class="border px-4 py-2">
-                {% if user.suspended %}
+                {% if user.is_admin %}
+                    <span class="text-purple-500">Admin</span>
+                {% else %}
+                    <span class="text-gray-700">User</span>
+                {% endif %}
+            </td>
+            <td class="border px-4 py-2">
+                {% if user.is_suspended %}
                     <span class="text-red-500">Suspended</span>
                 {% else %}
                     <span class="text-green-500">Active</span>
                 {% endif %}
             </td>
             <td class="border px-4 py-2 space-x-2">
-                <a href="{{ url_for('admin_user.edit_user', id=user.id) }}" class="text-blue-500 underline" title="Edit User">Edit</a>
-                <form method="POST" action="{{ url_for('admin_user.toggle_suspend_user', id=user.id) }}" style="display:inline;">
-                    <button type="submit" class="text-red-500 underline" title="Toggle Suspension">
-                        {% if user.suspended %}Unsuspend{% else %}Suspend{% endif %}
-                    </button>
-                </form>
+                <a href="{{ url_for('admin_users.edit_user', user_id=user.id) }}" class="text-blue-500 underline" title="Edit User">Edit</a>
+                {% if not user.is_suspended %}
+                <a href="{{ url_for('admin_users.suspend_user', user_id=user.id) }}" class="text-red-500 underline" title="Suspend User">Suspend</a>
+                {% else %}
+                <a href="{{ url_for('admin_users.unsuspend_user', user_id=user.id) }}" class="text-green-500 underline" title="Unsuspend User">Unsuspend</a>
+                {% endif %}
+                <a href="{{ url_for('admin_users.delete_user', user_id=user.id) }}" class="text-red-700 underline" title="Delete User">Delete</a>
             </td>
         </tr>
         {% endfor %}

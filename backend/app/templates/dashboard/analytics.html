@@ -3,51 +3,72 @@
 {% block title %}Analytics – Heimdall{% endblock %}
 
 {% block content %}
-<h2>📊 System Analytics</h2>
-<div class="stats-grid">
-  <div class="stat-box">Total Alerts: <span id="alert-count">0</span></div>
-  <div class="stat-box">Unique Individuals: <span id="unique-count">0</span></div>
-</div>
+<div class="container mx-auto px-4">
+    <h1 class="text-2xl font-bold my-4">Analytics Overview 📊</h1>
 
-<div class="chart-grid">
-  <canvas id="activityChart" height="100"></canvas>
-  <canvas id="cameraChart" height="100"></canvas>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-4">Alerts Over Last 7 Days</h2>
+            <canvas id="dailyChart"></canvas>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-4">Alerts by Camera</h2>
+            <canvas id="cameraChart"></canvas>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-4">Totals</h2>
+            <ul class="list-disc pl-5">
+                <li><strong>Total Alerts:</strong> <span id="totalAlerts">Loading...</span></li>
+                <li><strong>Unique Faces Recognized:</strong> <span id="uniqueFaces">Loading...</span></li>
+            </ul>
+        </div>
+
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-fetch("/dashboard/api/analytics")
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById("alert-count").textContent = data.total_alerts;
-    document.getElementById("unique-count").textContent = data.unique_faces;
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/dashboard/api/analytics')
+            .then(response => response.json())
+            .then(data => {
+                // Update totals
+                document.getElementById('totalAlerts').textContent = data.total_alerts;
+                document.getElementById('uniqueFaces').textContent = data.unique_faces;
 
-    new Chart(document.getElementById("activityChart"), {
-      type: 'line',
-      data: {
-        labels: data.daily_data.map(d => d.date),
-        datasets: [{
-          label: 'Alerts in Last 7 Days',
-          data: data.daily_data.map(d => d.count),
-          backgroundColor: 'rgba(54, 162, 235, 0.3)',
-          borderColor: 'rgb(54, 162, 235)',
-          fill: true,
-          tension: 0.4
-        }]
-      }
-    });
+                // Daily Alerts Chart
+                const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+                new Chart(dailyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: data.daily_data.map(item => item.date),
+                        datasets: [{
+                            label: 'Alerts',
+                            data: data.daily_data.map(item => item.count),
+                            fill: false,
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1
+                        }]
+                    }
+                });
 
-    new Chart(document.getElementById("cameraChart"), {
-      type: 'doughnut',
-      data: {
-        labels: data.camera_data.map(d => 'Camera ' + d.camera_id),
-        datasets: [{
-          label: 'Alerts by Camera',
-          data: data.camera_data.map(d => d.count),
-          backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545']
-        }]
-      }
+                // Camera Alerts Chart
+                const cameraCtx = document.getElementById('cameraChart').getContext('2d');
+                new Chart(cameraCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.camera_data.map(item => 'Camera ' + item.camera_id),
+                        datasets: [{
+                            label: 'Alerts',
+                            data: data.camera_data.map(item => item.count),
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                        }]
+                    }
+                });
+            });
     });
-  });
 </script>
 {% endblock %}

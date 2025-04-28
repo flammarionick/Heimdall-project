@@ -6,6 +6,7 @@ from app.models.alert import Alert
 import base64
 import cv2
 import numpy as np
+from app import db
 
 dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
