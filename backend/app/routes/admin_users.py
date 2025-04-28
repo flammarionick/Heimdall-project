@@ -30,23 +30,21 @@ def list_users():
 @login_required
 @admin_required
 def create_user():
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        is_admin = 'is_admin' in request.form
+    form = UserForm()
 
+    if form.validate_on_submit():
         new_user = User(
-            username=username,
-            email=email,
-            password_hash=generate_password_hash(password),
-            is_admin=is_admin
+            username=form.username.data,
+            email=form.email.data,
+            is_admin=form.is_admin.data,
+            password_hash=generate_password_hash(form.password.data)
         )
         db.session.add(new_user)
         db.session.commit()
         flash('User created successfully!', 'success')
         return redirect(url_for('admin_users.list_users'))
-    return render_template('admin/users/create.html')
+
+    return render_template('admin/users/create.html', form=form)
 
 @admin_users_bp.route('/suspend/<int:user_id>')
 @login_required

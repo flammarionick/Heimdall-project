@@ -1,16 +1,19 @@
-{% extends "base.html" %}
+{% extends 'layout.html' %}
+
+{% block title %}Upload Recognition – Heimdall{% endblock %}
+
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">Upload Image for Recognition</h1>
+<div class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Upload Image for Recognition</h1>
 
-<form method="POST" enctype="multipart/form-data" class="space-y-6">
-    <div>
-        <label for="file" class="block mb-1">Select an Image:</label>
-        <input type="file" id="file" name="file" title="Upload Image" placeholder="Choose an image file" class="border px-3 py-2 w-full" required>
-    </div>
-    
-    <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
-        Upload and Scan
-    </button>
-</form>
+    <form method="POST" enctype="multipart/form-data" class="space-y-4">
+        <div>
+            <label for="file" class="block text-sm font-medium text-gray-700">Select Image</label>
+            <input type="file" name="file" id="file" class="form-control" required>
+        </div>
 
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Upload & Recognize</button>
+    </form>
+</div>
 {% endblock %}
+

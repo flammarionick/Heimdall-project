@@ -36,6 +36,11 @@
           <li><a href="/dashboard/analytics"><span class="icon">📊</span><span class="label">Analytics</span></a></li>
           <li><a href="/settings/"><span class="icon">⚙️</span><span class="label">Settings</span></a></li>
           <li><a href="/auth/logout"><span class="icon">🚪</span><span class="label">Logout</span></a></li>
+          <li><a href="{{ url_for('recognition.live_recognition') }}"><span class="icon">🎥</span><span class="label">Live Recognition</span></a></li>
+          <li><a href="{{ url_for('recognition.upload_recognition') }}"><span class="icon">📷</span><span class="label">Upload Recognition</span></a></li>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+          <li><a href="{{ url_for('admin_users.list_users') }}"><span class="icon">👥</span><span class="label">Manage Users</span></a></li>
+        {% endif %}
         </ul>
         <button id="collapseToggle" class="collapse-btn" title="Collapse Sidebar">⇔</button>
       </aside>

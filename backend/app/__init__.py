@@ -40,6 +40,7 @@ def create_app():
     from app.routes.api.camera_routes import api_camera
     from app.routes.admin_users import admin_users_bp
     from app.routes.admin.user_admin import admin_user_bp
+    from app.routes.recognition_routes import recognition_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_users_bp)
@@ -50,6 +51,7 @@ def create_app():
     app.register_blueprint(alerts_api_bp)
     app.register_blueprint(settings_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(recognition_bp)
     app.register_blueprint(api_camera)
 
     return app

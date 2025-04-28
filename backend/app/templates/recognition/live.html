@@ -1,31 +1,55 @@
-{% extends "base.html" %}
+{% extends "layout.html" %}
+{% set no_sidebar = False %}
+{% block title %}Live Recognition – Heimdall{% endblock %}
+
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">Live Recognition</h1>
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Live Facial Recognition</h1>
 
-<div class="border rounded-lg p-4 flex flex-col items-center">
-    <video id="liveVideo" autoplay muted playsinline class="w-full max-w-lg mb-4 border"></video>
+    <div class="border rounded-lg p-4 flex flex-col items-center">
+        <video id="liveVideo" autoplay muted playsinline class="w-full max-w-lg mb-4 border shadow"></video>
 
-    <div id="matchResult" class="text-center mt-4 hidden">
-        <h2 class="text-2xl font-semibold text-green-600 mb-2">MATCH FOUND!</h2>
-        <p id="inmateInfo" class="text-lg"></p>
+        <div id="matchResult" class="text-center mt-6 hidden">
+            <h2 class="text-2xl font-semibold text-green-600 mb-2">MATCH FOUND!</h2>
+            <p id="inmateInfo" class="text-lg text-gray-700"></p>
+        </div>
+
+        <div class="mt-6">
+            <button id="startButton" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded">Start Camera</button>
+        </div>
     </div>
 </div>
 
 <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
 <script>
+    const video = document.getElementById('liveVideo');
+    const startButton = document.getElementById('startButton');
+    const matchDiv = document.getElementById('matchResult');
+    const inmateInfo = document.getElementById('inmateInfo');
+
+    // Handle webcam start
+    startButton.addEventListener('click', () => {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((err) => {
+                console.error('Error accessing webcam: ', err);
+                alert('Could not access your camera.');
+            });
+    });
+
+    // Setup Socket.IO
     const socket = io();
 
     socket.on('recognition_match', (data) => {
-        const matchDiv = document.getElementById('matchResult');
-        const inmateInfo = document.getElementById('inmateInfo');
-        
         inmateInfo.innerText = `Name: ${data.full_name} | Location: ${data.camera_location}`;
         matchDiv.classList.remove('hidden');
 
-        // Play siren
-        const audio = new Audio('/static/sounds/siren.mp3');
+        // Play siren sound
+        const audio = new Audio('/static/sounds/siren.wav');
         audio.play();
     });
 </script>
-
 {% endblock %}
+

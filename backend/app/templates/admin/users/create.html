@@ -1,32 +1,38 @@
 {% extends 'layout.html' %}
 
+{% block title %}Create User – Heimdall{% endblock %}
+
 {% block content %}
-<h1 class="text-2xl font-bold mb-4">Create New User</h1>
+<div class="container mx-auto px-4">
+    <h1 class="text-2xl font-bold my-4">Create New User</h1>
 
-<form method="POST">
-    {{ form.hidden_tag() }}
+    <form method="POST">
+        {{ form.hidden_tag() }}
 
-    <div class="mb-4">
-        <label for="username">Username</label>
-        {{ form.username(class="form-control", placeholder="Enter username") }}
-    </div>
+        <div class="mb-4">
+            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+            {{ form.username(class="form-control", placeholder="Enter username") }}
+        </div>
 
-    <div class="mb-4">
-        <label for="email">Email</label>
-        {{ form.email(class="form-control", placeholder="Enter email") }}
-    </div>
+        <div class="mb-4">
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+            {{ form.email(class="form-control", placeholder="Enter email") }}
+        </div>
 
-    <div class="mb-4">
-        <label for="password">Password</label>
-        {{ form.password(class="form-control", placeholder="Enter password") }}
-    </div>
+        <div class="mb-4">
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+            {{ form.password(class="form-control", placeholder="Enter password") }}
+        </div>
 
-    <div class="mb-4">
-        <label>
-            {{ form.is_admin() }} Admin User
-        </label>
-    </div>
+        <div class="mb-4">
+            <label>
+                {{ form.is_admin() }} Admin User
+            </label>
+        </div>
 
-    <button type="submit" class="btn btn-primary">Create</button>
-</form>
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Create User</button>
+        <a href="{{ url_for('admin_users.list_users') }}" class="ml-4 text-gray-600 underline">Cancel</a>
+    </form>
+</div>
 {% endblock %}
+
