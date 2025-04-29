@@ -1,45 +1,35 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
-from flask_login import login_required
-import os
-from werkzeug.utils import secure_filename
+from flask import Blueprint, request, jsonify
+from flask_socketio import emit
+from app import socketio
+import numpy as np
+import cv2
+import base64
 
-recognition_bp = Blueprint('recognition', __name__, url_prefix='/recognition')
+recognition_bp = Blueprint('recognition_api', __name__, url_prefix='/api/recognition')
 
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+@recognition_bp.route('/match', methods=['POST'])
+def recognize_face():
+    if 'frame' not in request.files:
+        return jsonify({"error": "No frame uploaded"}), 400
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    frame_file = request.files['frame']
+    npimg = np.frombuffer(frame_file.read(), np.uint8)
+    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
 
-@recognition_bp.route('/upload', methods=['GET', 'POST'])
-@login_required
-def upload_recognition():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file part.', 'danger')
-            return redirect(request.url)
-        
-        file = request.files['file']
-        if file.filename == '':
-            flash('No selected file.', 'danger')
-            return redirect(request.url)
-        
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            upload_path = os.path.join(UPLOAD_FOLDER, filename)
-            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-            file.save(upload_path)
+    # 🚨 TODO: replace with real face recognition logic
+    fake_match = True
+    inmate_info = {
+        "full_name": "John Doe",
+        "camera_location": "Main Entrance"
+    }
 
-            # 📸 Here you would run the recognition model
-            # result = recognize_face(upload_path)
-            result = {"match": False, "inmate": None}  # 🔥 Placeholder for now
+    if fake_match:
+        socketio.emit('match_found', {
+            'inmate_name': inmate_info['full_name'],
+            'camera_location': inmate_info['camera_location']
+        })
 
-            return render_template('recognition/upload_result.html', result=result)
-
-    return render_template('recognition/upload.html')
-
-@recognition_bp.route('/live')
-@login_required
-def live_recognition():
-    return render_template('recognition/live.html')
+        return jsonify({"status": "match_found", "inmate": inmate_info}), 200
+    else:
+        return jsonify({"status": "no_match"}), 200
 

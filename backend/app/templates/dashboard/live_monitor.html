@@ -79,5 +79,46 @@
       });
     });
   </script>
+
+<script>
+    // 📷 Access webcam
+    const video = document.getElementById('liveVideo');
+    navigator.mediaDevices.getUserMedia({ video: true })
+    .then((stream) => {
+        video.srcObject = stream;
+    })
+    .catch((err) => {
+        console.error('Error accessing webcam:', err);
+    });
+    
+    // 📤 Capture and POST frame every 2 seconds
+    setInterval(() => {
+        if (!video.srcObject) return;
+    
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+        canvas.toBlob((blob) => {
+            const formData = new FormData();
+            formData.append('frame', blob, 'frame.jpg');
+    
+            fetch('/api/recognition/match', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Recognition Response:', data);
+            })
+            .catch(error => {
+                console.error('Recognition error:', error);
+            });
+        }, 'image/jpeg');
+    }, 2000);
+    </script>
+    
   
 {% endblock %}
