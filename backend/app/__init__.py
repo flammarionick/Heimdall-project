@@ -54,4 +54,7 @@ def create_app():
     app.register_blueprint(recognition_bp)
     app.register_blueprint(api_camera)
 
+    from app import socket_events  # 👈 Add this line after blueprints
+
+
     return app
