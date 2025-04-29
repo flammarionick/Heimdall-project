@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Live Monitoring</h1>
+
+<div id="cameraGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  <!-- Camera feeds will appear here -->
+</div>
+
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script>
+  const socket = io();
+  const cameraGrid = document.getElementById('cameraGrid');
+
+  socket.on('receive_frame', (data) => {
+    const userId = data.username;
+    let cameraCard = document.getElementById(`camera-${userId}`);
+
+    if (!cameraCard) {
+      cameraCard = document.createElement('div');
+      cameraCard.className = 'border rounded-lg p-2 bg-white shadow-md';
+      cameraCard.id = `camera-${userId}`;
+      cameraCard.innerHTML = `
+        <h2 class="text-center font-bold mb-2">${userId}</h2>
+        <img id="img-${userId}" src="" class="w-full h-auto rounded">
+        <div class="text-sm text-gray-500 text-center mt-2" id="timestamp-${userId}"></div>
+      `;
+      cameraGrid.appendChild(cameraCard);
+    }
+
+    document.getElementById(`img-${userId}`).src = data.frame;
+    document.getElementById(`timestamp-${userId}`).innerText = `Last updated: ${data.timestamp}`;
+  });
+</script>
+{% endblock %}
