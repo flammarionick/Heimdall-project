@@ -54,4 +54,9 @@ def analytics_data():
         "camera_data": camera_data
     })
 
+@dashboard_bp.route('/monitor')
+@login_required
+def live_monitor():
+    return render_template('dashboard/monitor.html')
+
 

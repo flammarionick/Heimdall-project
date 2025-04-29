@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block title %}Live Monitoring – Heimdall{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Live Monitoring</h1>
+
+    <div id="cameraFeeds" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Dynamic cameras will appear here -->
+    </div>
+</div>
+
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script>
+    const cameraFeeds = document.getElementById('cameraFeeds');
+    const socket = io();
+
+    // For each connected camera stream, create a video element
+    socket.on('new_camera', (data) => {
+        const videoDiv = document.createElement('div');
+        videoDiv.classList.add('border', 'rounded-lg', 'p-4', 'flex', 'flex-col', 'items-center');
+
+        const title = document.createElement('h2');
+        title.classList.add('text-xl', 'font-semibold', 'mb-2');
+        title.innerText = `Camera ${data.camera_id} - User: ${data.username}`;
+        
+        const video = document.createElement('video');
+        video.autoplay = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.srcObject = data.stream; // placeholder (browser cannot really do remote streams directly this way)
+
+        video.classList.add('w-full', 'max-w-md', 'border');
+
+        videoDiv.appendChild(title);
+        videoDiv.appendChild(video);
+        cameraFeeds.appendChild(videoDiv);
+    });
+
+    // Later when backend provides proper streaming endpoints, we update video.src
+</script>
+{% endblock %}
