@@ -9,7 +9,6 @@
 <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
 <script>
   const socket = io();
-  const cameraGrid = document.getElementById('cameraGrid');
 
   socket.on('receive_frame', (data) => {
     const userId = data.username;
@@ -31,4 +30,54 @@
     document.getElementById(`timestamp-${userId}`).innerText = `Last updated: ${data.timestamp}`;
   });
 </script>
+
+<script>
+    const cameraGrid = document.getElementById('cameraGrid');
+  
+    socket.on('receive_frame', (data) => {
+      const userId = data.username;
+      let cameraCard = document.getElementById(`camera-${userId}`);
+  
+      if (!cameraCard) {
+        cameraCard = document.createElement('div');
+        cameraCard.className = 'border rounded-lg p-2 bg-white shadow-md';
+        cameraCard.id = `camera-${userId}`;
+        cameraCard.innerHTML = `
+          <h2 class="text-center font-bold mb-2">${userId}</h2>
+          <img id="img-${userId}" src="" class="w-full h-auto rounded">
+          <div class="text-sm text-gray-500 text-center mt-2" id="timestamp-${userId}"></div>
+        `;
+        cameraGrid.appendChild(cameraCard);
+      }
+  
+      document.getElementById(`img-${userId}`).src = data.frame;
+      document.getElementById(`timestamp-${userId}`).innerText = `Last updated: ${data.timestamp}`;
+    });
+  
+    // 🚨 Handle MATCH FOUND alert
+    socket.on('match_found', (data) => {
+      const { inmate_name, camera_location } = data;
+  
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'fixed top-0 left-0 w-full h-full bg-red-700 bg-opacity-80 flex flex-col justify-center items-center text-white text-center p-10 z-50';
+      alertDiv.innerHTML = `
+        <h1 class="text-4xl font-bold mb-4">🚨 MATCH FOUND 🚨</h1>
+        <p class="text-2xl mb-2">Inmate: ${inmate_name}</p>
+        <p class="text-xl">Location: ${camera_location}</p>
+        <button id="dismissAlert" class="mt-6 bg-white text-red-700 font-bold py-2 px-4 rounded">Dismiss</button>
+      `;
+  
+      document.body.appendChild(alertDiv);
+  
+      const siren = new Audio('/static/sounds/siren.mp3');
+      siren.play();
+  
+      document.getElementById('dismissAlert').addEventListener('click', () => {
+        alertDiv.remove();
+        siren.pause();
+        siren.currentTime = 0;
+      });
+    });
+  </script>
+  
 {% endblock %}
