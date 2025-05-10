@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Inmate Management</h1>
+
+<div class="flex justify-between items-center mb-4">
+  <a href="{{ url_for('inmate.register') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+    ➕ Register New Inmate
+  </a>
+</div>
+
+{% if inmates %}
+<table class="table-auto w-full border-collapse border border-gray-300">
+  <thead>
+    <tr class="bg-gray-100">
+      <th class="border px-4 py-2">ID</th>
+      <th class="border px-4 py-2">Full Name</th>
+      <th class="border px-4 py-2">Crime</th>
+      <th class="border px-4 py-2">Photo</th>
+      <th class="border px-4 py-2">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for inmate in inmates %}
+    <tr>
+      <td class="border px-4 py-2">{{ inmate.id }}</td>
+      <td class="border px-4 py-2">{{ inmate.full_name }}</td>
+      <td class="border px-4 py-2">{{ inmate.crime }}</td>
+      <td class="border px-4 py-2">
+        <img src="{{ url_for('static', filename='uploads/inmates/' ~ inmate.photo_filename) }}" alt="Inmate Photo" class="w-16 h-16 object-cover rounded-full">
+      </td>
+      <td class="border px-4 py-2 space-x-2">
+        <a href="{{ url_for('inmate.view', inmate_id=inmate.id) }}" class="text-blue-500 hover:underline">View</a>
+        <a href="{{ url_for('inmate.edit', inmate_id=inmate.id) }}" class="text-yellow-500 hover:underline">Edit</a>
+        <a href="{{ url_for('inmate.delete', inmate_id=inmate.id) }}" class="text-red-500 hover:underline" onclick="return confirm('Are you sure you want to delete this inmate?');">Delete</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No inmates registered yet.</p>
+{% endif %}
+{% endblock %}

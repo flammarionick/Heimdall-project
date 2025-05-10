@@ -1,5 +1,6 @@
 # app/routes/alerts.py
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, render_template, request
+from flask_login import login_required
 from app import db
 from app.models.alert import Alert
 
@@ -46,3 +47,10 @@ def resolve_alert(alert_id):
     alert.resolved = True
     db.session.commit()
     return jsonify({'status': 'resolved'})
+
+    
+@alerts_bp.route('/')
+@login_required
+def alerts_home():
+    return render_template('alerts/index.html')
+

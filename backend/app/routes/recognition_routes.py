@@ -33,3 +33,30 @@ def recognize_face():
     else:
         return jsonify({"status": "no_match"}), 200
 
+# app/routes/recognition_routes.py
+
+from flask import Blueprint, render_template
+
+recognition_bp = Blueprint('recognition', __name__, url_prefix='/recognition')
+
+@recognition_bp.route('/live')
+def live_recognition():
+    return render_template('recognition/live.html')
+
+
+# app/routes/recognition_routes.py
+
+from flask import Blueprint, render_template, request
+
+recognition_bp = Blueprint('recognition', __name__, url_prefix='/recognition')
+
+@recognition_bp.route('/live')
+def live_recognition():
+    return render_template('recognition/live.html')
+
+@recognition_bp.route('/upload', methods=['GET', 'POST'])
+def upload_recognition():
+    if request.method == 'POST':
+        # Later: Handle uploaded file and do recognition here
+        pass
+    return render_template('recognition/upload.html')
