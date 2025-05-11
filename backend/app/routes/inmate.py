@@ -7,4 +7,9 @@ inmate_bp = Blueprint('inmate', __name__, url_prefix='/inmates')
 @inmate_bp.route('/')
 @login_required
 def inmate_home():
-    return "<h3>Inmate Management Coming Soon</h3>"
+    return render_template('inmate/index.html', title='Inmate Management')
+
+@inmate_bp.route('/register', methods=['GET', 'POST'])
+@login_required
+def register():
+    return render_template('inmate/register.html')

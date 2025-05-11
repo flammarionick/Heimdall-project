@@ -34,13 +34,14 @@ def create_app():
     from app.routes.dashboard import dashboard_bp
     from app.routes.inmate import inmate_bp
     from app.routes.camera import camera_bp
-    from app.routes.alerts import alerts_bp as alerts_api_bp
     from app.routes.settings import settings_bp
     from app.routes.api import api_bp
     from app.routes.api.camera_routes import api_camera
     from app.routes.admin_users import admin_users_bp
     from app.routes.admin.user_admin import admin_user_bp
-    from app.routes.recognition_routes import recognition_bp
+    from app.routes.recognition import recognition_bp
+    from app.routes.recognition_api import recognition_api_bp
+    from app.routes.alerts import alerts_api_bp, alerts_page_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_users_bp)
@@ -53,6 +54,8 @@ def create_app():
     app.register_blueprint(api_bp)
     app.register_blueprint(recognition_bp)
     app.register_blueprint(api_camera)
+    app.register_blueprint(alerts_page_bp)
+    app.register_blueprint(recognition_api_bp)
 
     from app import socket_events  # 👈 Add this line after blueprints
 

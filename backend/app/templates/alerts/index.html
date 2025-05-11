@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block title %}Alerts & Logs - Heimdall{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Alerts & Logs</h1>
+
+<div class="overflow-x-auto">
+  <table class="min-w-full bg-white shadow rounded-lg">
+    <thead>
+      <tr class="bg-gray-100 text-left text-sm font-semibold text-gray-700">
+        <th class="py-3 px-4">Date</th>
+        <th class="py-3 px-4">Camera</th>
+        <th class="py-3 px-4">Type</th>
+        <th class="py-3 px-4">Inmate ID</th>
+        <th class="py-3 px-4">Message</th>
+      </tr>
+    </thead>
+    <tbody class="text-sm text-gray-700 divide-y divide-gray-200">
+      {% for alert in alerts %}
+      <tr>
+        <td class="py-2 px-4">{{ alert.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        <td class="py-2 px-4">{{ alert.camera_id }}</td>
+        <td class="py-2 px-4">
+          {% if alert.alert_type == 'match_found' %}
+            <span class="text-red-600 font-semibold">Match</span>
+          {% else %}
+            <span class="text-yellow-600 font-semibold">{{ alert.alert_type|capitalize }}</span>
+          {% endif %}
+        </td>
+        <td class="py-2 px-4">{{ alert.inmate_id or 'Unknown' }}</td>
+        <td class="py-2 px-4">{{ alert.message }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="5" class="py-4 px-4 text-center text-gray-400">No alerts recorded.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block title %}Manage Cameras - Heimdall{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Manage Cameras</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% for camera in cameras %}
+  <div class="border p-4 rounded shadow bg-white">
+    <h2 class="text-xl font-semibold mb-2">{{ camera.name }}</h2>
+    <p class="text-gray-600 text-sm mb-1"><strong>Location:</strong> {{ camera.location }}</p>
+    <p class="text-gray-600 text-sm mb-1"><strong>Status:</strong>
+      {% if camera.active %}
+        <span class="text-green-600 font-semibold">Online</span>
+      {% else %}
+        <span class="text-red-600 font-semibold">Offline</span>
+      {% endif %}
+    </p>
+    <p class="text-gray-600 text-sm"><strong>Last Seen:</strong> {{ camera.last_seen.strftime('%Y-%m-%d %H:%M:%S') if camera.last_seen else "Never" }}</p>
+  </div>
+  {% else %}
+    <p class="text-gray-500 col-span-3">No cameras configured.</p>
+  {% endfor %}
+</div>
+{% endblock %}

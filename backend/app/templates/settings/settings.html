@@ -6,10 +6,10 @@
 
 <form method="POST" class="settings-form">
   <label>Username</label>
-  <input type="text" name="username" value="{{ current_user.username }}" required>
+  <input type="text" name="username" value="{{ current_user.username }}" title="Enter your username" placeholder="Enter your username" required>
 
   <label>Email</label>
-  <input type="email" name="email" value="{{ current_user.email }}" required>
+  <input type="email" name="email" value="{{ current_user.email }}" title="Enter your email address" placeholder="Enter your email" required>
 
   <input type="submit" value="Update Profile">
 </form>
