@@ -4,6 +4,8 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, Length
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import SubmitField
+from wtforms import StringField, IntegerField, SubmitField
+
 
 
 class LoginForm(FlaskForm):
@@ -20,12 +22,14 @@ class UserForm(FlaskForm):
 
 
 class InmateForm(FlaskForm):
-    name = StringField('Name', validators=[DataRequired()])
-    inmate_id = StringField('Inmate ID', validators=[DataRequired()])
-    crime = StringField('Crime', validators=[DataRequired()])
-    photo_url = StringField('Photo URL')
+    full_name = StringField('Full Name', validators=[DataRequired()])
+    prison_id = StringField('Prison ID / Reference Number', validators=[DataRequired()])
+    face_image = FileField('face_image (Image Upload)', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!'),
+        DataRequired()
+    ])
+    duration_months = IntegerField('Duration (in months)', validators=[DataRequired()])
     submit = SubmitField('Register')
-
 
 class UploadFaceForm(FlaskForm):
     file = FileField('Upload Image', validators=[
