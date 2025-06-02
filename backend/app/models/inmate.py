@@ -1,6 +1,8 @@
 # models/inmate.py
 from app.extensions import db
 from datetime import datetime, timedelta
+import json
+
 
 class Inmate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -9,6 +11,7 @@ class Inmate(db.Model):
     sentence_start = db.Column(db.DateTime, default=datetime.utcnow)
     sentence_duration_days = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(50), default='Incarcerated')  # or 'Released'
+    face_encoding = db.Column(db.PickleType, nullable=True) 
 
     alerts = db.relationship('Alert', backref='inmate', lazy=True)
 

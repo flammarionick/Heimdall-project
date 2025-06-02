@@ -1,5 +1,5 @@
 # backend/app/__init__.py
-from flask import Flask
+from flask import Flask, render_template, redirect, url_for
 from dotenv import load_dotenv
 from flask_socketio import SocketIO
 from flask_wtf import CSRFProtect
@@ -23,13 +23,14 @@ def create_app():
     from .config import DevelopmentConfig
     app.config.from_object(DevelopmentConfig)
 
-    #csrf.init_app(app)
+    # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     socketio.init_app(app)
 
+    # Register blueprints
     from app.routes.auth import auth_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.inmate import inmate_bp
@@ -57,7 +58,11 @@ def create_app():
     app.register_blueprint(alerts_page_bp)
     app.register_blueprint(recognition_api_bp)
 
-    from app import socket_events  # 👈 Add this line after blueprints
+    from app import socket_events  # Required for Socket.IO events
 
+    # Add root route here
+    @app.route('/')
+    def index():
+        return redirect(url_for('auth.login'))
 
     return app
