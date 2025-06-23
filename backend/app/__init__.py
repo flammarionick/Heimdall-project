@@ -1,14 +1,13 @@
-# backend/app/__init__.py
 from flask import Flask, render_template, redirect, url_for
 from dotenv import load_dotenv
 from flask_socketio import SocketIO
 from flask_wtf import CSRFProtect
-
 from app.extensions import db, login_manager, migrate
 from app.models.user import User
 from app.models.camera import Camera
 from app.models.inmate import Inmate
 from app.models.alert import Alert
+from flask_cors import CORS  # ✅ OK to keep at top
 
 csrf = CSRFProtect()
 socketio = SocketIO(cors_allowed_origins="*")
@@ -16,6 +15,9 @@ socketio = SocketIO(cors_allowed_origins="*")
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'your-super-secret-key'
+
+    # ✅ Move CORS init here after app is created
+    CORS(app)  
 
     # Load environment
     load_dotenv()
@@ -43,8 +45,11 @@ def create_app():
     from app.routes.recognition import recognition_bp
     from app.routes.recognition_api import recognition_api_bp
     from app.routes.alerts import alerts_api_bp, alerts_page_bp
+    from app.routes.admin_dashboard import admin_dashboard_bp
+    from app.routes.api_auth import api_auth_bp
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(api_auth_bp)
     app.register_blueprint(admin_users_bp)
     app.register_blueprint(admin_user_bp)
     app.register_blueprint(dashboard_bp)
@@ -57,10 +62,10 @@ def create_app():
     app.register_blueprint(api_camera)
     app.register_blueprint(alerts_page_bp)
     app.register_blueprint(recognition_api_bp)
+    app.register_blueprint(admin_dashboard_bp)
 
     from app import socket_events  # Required for Socket.IO events
 
-    # Add root route here
     @app.route('/')
     def index():
         return redirect(url_for('auth.login'))

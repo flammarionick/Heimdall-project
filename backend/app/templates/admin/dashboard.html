@@ -1,56 +1,57 @@
-{% extends 'base.html' %}
+{% extends 'layout.html' %}
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<div class="p-6">
+<div class="p-6 text-white">
 
-  <h1 class="text-2xl font-bold mb-6">Admin Dashboard</h1>
+  <h1 class="text-3xl font-bold mb-6">Admin Dashboard</h1>
 
   <!-- Summary Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white shadow rounded-lg p-5">
-      <h2 class="text-lg font-semibold mb-2">Total Users</h2>
-      <p class="text-3xl font-bold">{{ total_users }}</p>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <div class="bg-blue-900 p-6 rounded-lg shadow">
+      <h2 class="text-sm uppercase tracking-wider mb-1">Facial Recognitions</h2>
+      <p class="text-4xl font-semibold">{{ facial_recognitions }}</p>
     </div>
-
-    <div class="bg-white shadow rounded-lg p-5">
-      <h2 class="text-lg font-semibold mb-2">Active Users</h2>
-      <p class="text-3xl font-bold">{{ active_users }}</p>
+    <div class="bg-blue-900 p-6 rounded-lg shadow">
+      <h2 class="text-sm uppercase tracking-wider mb-1">Unique Individuals</h2>
+      <p class="text-4xl font-semibold">{{ unique_individuals }}</p>
     </div>
-
-    <div class="bg-white shadow rounded-lg p-5">
-      <h2 class="text-lg font-semibold mb-2">Suspended Users</h2>
-      <p class="text-3xl font-bold">{{ suspended_users }}</p>
+    <div class="bg-blue-900 p-6 rounded-lg shadow">
+      <h2 class="text-sm uppercase tracking-wider mb-1">Total Inmates</h2>
+      <p class="text-4xl font-semibold">{{ total_inmates }}</p>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white shadow rounded-lg p-5">
-      <h2 class="text-lg font-semibold mb-2">Total Cameras</h2>
-      <p class="text-3xl font-bold">{{ total_cameras }}</p>
-    </div>
-
-    <div class="bg-white shadow rounded-lg p-5">
-      <h2 class="text-lg font-semibold mb-2">Total Alerts</h2>
-      <p class="text-3xl font-bold">{{ total_alerts }}</p>
-    </div>
-
-    <div class="bg-white shadow rounded-lg p-5">
-      <h2 class="text-lg font-semibold mb-2">Total Inmates</h2>
-      <p class="text-3xl font-bold">{{ total_inmates }}</p>
-    </div>
-  </div>
-
-  <!-- Charts Section -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-    <div class="bg-white shadow rounded-lg p-5">
-      <h2 class="text-lg font-semibold mb-4">Matches Over Time</h2>
+  <!-- Charts -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="bg-blue-900 p-6 rounded-lg shadow">
+      <h2 class="text-lg font-semibold mb-4">Activity Over Time</h2>
       <canvas id="matchesChart"></canvas>
     </div>
+    <div class="bg-blue-900 p-6 rounded-lg shadow">
+      <h2 class="text-lg font-semibold mb-4">Recognition by Camera</h2>
+      <canvas id="cameraChart"></canvas>
+    </div>
+  </div>
 
-    <div class="bg-white shadow rounded-lg p-5">
-      <h2 class="text-lg font-semibold mb-4">Inmate Status</h2>
-      <canvas id="statusChart"></canvas>
+  <!-- Recent Activity -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-blue-900 p-6 rounded-lg shadow">
+      <h2 class="text-lg font-semibold mb-4">Recent Activity</h2>
+      <ul>
+        {% for activity in recent_activities %}
+        <li class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="inline-block w-8 h-8 bg-blue-700 rounded-full"></span>
+            <span>{{ activity.text }}</span>
+          </div>
+          <small class="text-sm text-gray-300">{{ activity.time }}</small>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    
     </div>
   </div>
 
@@ -59,64 +60,45 @@
 <!-- Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const matchesCtx = document.getElementById('matchesChart').getContext('2d');
-  const statusCtx = document.getElementById('statusChart').getContext('2d');
+  const cameraCtx = document.getElementById('cameraChart').getContext('2d');
 
-  const matchesChart = new Chart(matchesCtx, {
+  const matchChart = new Chart(matchesCtx, {
     type: 'line',
     data: {
-      labels: {{ match_labels|tojson }},
+      labels: {{ match_labels | tojson }},
       datasets: [{
-        label: 'Matches',
-        data: {{ match_counts|tojson }},
-        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-        borderColor: 'rgba(59, 130, 246, 1)',
-        borderWidth: 2
+        label: 'Recognitions',
+        data: {{ match_counts | tojson }},
+        borderColor: '#60a5fa',
+        backgroundColor: 'rgba(96, 165, 250, 0.2)',
+        tension: 0.4,
+        borderWidth: 2,
+        fill: true
       }]
     },
     options: {
-      responsive: true
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      }
     }
   });
 
-  const statusChart = new Chart(statusCtx, {
-    type: 'pie',
+  const cameraChart = new Chart(cameraCtx, {
+    type: 'doughnut',
     data: {
-      labels: ['Released', 'In Custody'],
+      labels: {{ camera_labels | tojson }},
       datasets: [{
-        data: {{ inmate_status_counts|tojson }},
-        backgroundColor: [
-          'rgba(34, 197, 94, 0.7)', // Released (Green)
-          'rgba(239, 68, 68, 0.7)'  // In Custody (Red)
-        ]
+        data: {{ camera_counts | tojson }},
+        backgroundColor: ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af']
       }]
     },
     options: {
-      responsive: true
+      responsive: true,
+      cutout: '70%'
     }
-  });
-
-});
-</script>
-
-
-
-
-
-  const statusChart = new Chart(statusCtx, {
-    type: 'pie',
-    data: {
-      labels: ['Released', 'In Custody'],
-      datasets: [{
-        data: {{ inmate_status_counts|safe }},
-        backgroundColor: [
-          'rgba(34, 197, 94, 0.7)',
-          'rgba(239, 68, 68, 0.7)'
-        ]
-      }]
-    },
-    options: { responsive: true }
   });
 });
 </script>
