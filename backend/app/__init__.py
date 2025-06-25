@@ -8,6 +8,8 @@ from app.models.camera import Camera
 from app.models.inmate import Inmate
 from app.models.alert import Alert
 from flask_cors import CORS  # ✅ OK to keep at top
+from flask_socketio import SocketIO
+
 
 csrf = CSRFProtect()
 socketio = SocketIO(cors_allowed_origins="*")

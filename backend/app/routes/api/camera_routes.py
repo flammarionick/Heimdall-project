@@ -17,20 +17,20 @@ def create_camera():
     new_camera = Camera(
         name=data['name'],
         location=data['location'],
-        status=True  # By default, camera is active
+        status=True  # Default active
     )
     db.session.add(new_camera)
     db.session.commit()
     socketio.emit('camera_created', new_camera.to_dict())
     return jsonify({'message': 'Camera created successfully'}), 201
 
-# Get a single camera by ID
+# Get a single camera
 @api_camera.route('/<int:id>', methods=['GET'])
 def get_camera(id):
     camera = Camera.query.get_or_404(id)
     return jsonify(camera.to_dict())
 
-# Update a camera (name/location)
+# Update camera
 @api_camera.route('/<int:id>', methods=['PUT'])
 def update_camera(id):
     camera = Camera.query.get_or_404(id)
@@ -41,7 +41,7 @@ def update_camera(id):
     socketio.emit('camera_updated', camera.to_dict())
     return jsonify({'message': 'Camera updated successfully'})
 
-# Delete a camera
+# Delete camera
 @api_camera.route('/<int:id>', methods=['DELETE'])
 def delete_camera(id):
     camera = Camera.query.get_or_404(id)
@@ -50,7 +50,7 @@ def delete_camera(id):
     socketio.emit('camera_deleted', {'id': id})
     return jsonify({'message': 'Camera deleted successfully'})
 
-# Toggle camera status (on/off)
+# Toggle camera status
 @api_camera.route('/<int:id>/toggle', methods=['PATCH'])
 def toggle_camera_status(id):
     camera = Camera.query.get_or_404(id)

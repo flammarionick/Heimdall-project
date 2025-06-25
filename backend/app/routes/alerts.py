@@ -1,3 +1,4 @@
+# app/routes/alerts.py
 from flask import Blueprint, jsonify, render_template, request
 from flask_login import login_required
 from app import db
@@ -6,7 +7,6 @@ from app.models.alert import Alert
 alerts_api_bp = Blueprint('alerts_api', __name__, url_prefix='/api/alerts')
 alerts_page_bp = Blueprint('alerts', __name__, url_prefix='/alerts')
 
-
 # =====================
 # 🔔 API ROUTES
 # =====================
@@ -14,15 +14,19 @@ alerts_page_bp = Blueprint('alerts', __name__, url_prefix='/alerts')
 @alerts_api_bp.route('/', methods=['GET'])
 def get_alerts():
     alerts = Alert.query.order_by(Alert.timestamp.desc()).all()
-    return jsonify([{
-        'id': a.id,
-        'message': a.message,
-        'level': a.level,
-        'timestamp': a.timestamp.isoformat(),
-        'resolved': a.resolved,
-        'inmate_id': a.inmate_id
-    } for a in alerts])
-
+    return jsonify([
+        {
+            'id': a.id,
+            'message': a.message,
+            'level': a.level,
+            'timestamp': a.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            'resolved': a.resolved,
+            'inmate_id': a.inmate_id,
+            'camera_id': a.camera_id,
+            'confidence': a.confidence
+        }
+        for a in alerts
+    ])
 
 @alerts_api_bp.route('/', methods=['POST'])
 def create_alert():
@@ -30,7 +34,9 @@ def create_alert():
     alert = Alert(
         message=data.get('message'),
         level=data.get('level', 'info'),
-        inmate_id=data.get('inmate_id')
+        inmate_id=data.get('inmate_id'),
+        camera_id=data.get('camera_id'),
+        confidence=data.get('confidence')
     )
     db.session.add(alert)
     db.session.commit()
@@ -41,12 +47,14 @@ def create_alert():
         'id': alert.id,
         'message': alert.message,
         'level': alert.level,
-        'timestamp': alert.timestamp.isoformat(),
-        'inmate_id': alert.inmate_id
+        'timestamp': alert.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+        'resolved': alert.resolved,
+        'inmate_id': alert.inmate_id,
+        'camera_id': alert.camera_id,
+        'confidence': alert.confidence
     })
 
     return jsonify({'status': 'created', 'id': alert.id}), 201
-
 
 @alerts_api_bp.route('/<int:alert_id>/resolve', methods=['POST'])
 def resolve_alert(alert_id):
