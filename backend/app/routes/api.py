@@ -2,10 +2,12 @@ from flask import Blueprint, request, jsonify
 import base64
 import cv2
 import numpy as np
+from app.utils.auth_helpers import login_or_jwt_required
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 @api_bp.route('/recognize', methods=['POST'])
+@login_or_jwt_required
 def recognize():
     data = request.get_json()
     if not data or 'image' not in data:

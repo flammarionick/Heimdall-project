@@ -2,11 +2,13 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.models.user import User
 from app import db
 from flask_login import login_required, current_user
+from app.utils.auth_helpers import login_or_jwt_required
+
 
 admin_user_bp = Blueprint('admin_user', __name__, url_prefix='/admin/users')
 
 @admin_user_bp.route('/')
-@login_required
+@login_or_jwt_required
 def list_users():
     if not current_user.is_admin():
         flash('Access denied.')
@@ -15,7 +17,7 @@ def list_users():
     return render_template('admin/users/list.html', users=users)
 
 @admin_user_bp.route('/create', methods=['GET', 'POST'])
-@login_required
+@login_or_jwt_required
 def create_user():
     if not current_user.is_admin():
         flash('Access denied.')
@@ -39,7 +41,7 @@ def create_user():
     return render_template('admin/users/create.html')
 
 @admin_user_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
-@login_required
+@login_or_jwt_required
 def edit_user(id):
     if not current_user.is_admin():
         flash('Access denied.')
@@ -57,7 +59,7 @@ def edit_user(id):
     return render_template('admin/users/edit.html', user=user)
 
 @admin_user_bp.route('/<int:id>/toggle-suspend', methods=['POST'])
-@login_required
+@login_or_jwt_required
 def toggle_suspend_user(id):
     if not current_user.is_admin():
         flash('Access denied.')

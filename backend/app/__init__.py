@@ -49,6 +49,10 @@ def create_app():
     from app.routes.alerts import alerts_api_bp, alerts_page_bp
     from app.routes.admin_dashboard import admin_dashboard_bp
     from app.routes.api_auth import api_auth_bp
+    from app.routes.api.user_routes import user_api_bp
+    from app.routes.upload_recognition import upload_bp
+
+
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(api_auth_bp)
@@ -65,6 +69,8 @@ def create_app():
     app.register_blueprint(alerts_page_bp)
     app.register_blueprint(recognition_api_bp)
     app.register_blueprint(admin_dashboard_bp)
+    app.register_blueprint(user_api_bp)
+    app.register_blueprint(upload_bp)
 
     from app import socket_events  # Required for Socket.IO events
 

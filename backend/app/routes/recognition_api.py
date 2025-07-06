@@ -1,12 +1,14 @@
 from flask import Blueprint, request, jsonify
 from flask_socketio import emit
 from app import socketio
+from app.utils.auth_helpers import login_or_jwt_required
 import numpy as np
 import cv2
 
 recognition_api_bp = Blueprint('recognition_api', __name__, url_prefix='/api/recognition')
 
 @recognition_api_bp.route('/match', methods=['POST'])
+@login_or_jwt_required
 def recognize_face():
     if 'frame' not in request.files:
         return jsonify({"error": "No frame uploaded"}), 400

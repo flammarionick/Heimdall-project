@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, render_template, request
 from flask_login import login_required
 from app import db
 from app.models.alert import Alert
+from app.utils.auth_helpers import login_or_jwt_required
 
 alerts_api_bp = Blueprint('alerts_api', __name__, url_prefix='/api/alerts')
 alerts_page_bp = Blueprint('alerts', __name__, url_prefix='/alerts')
@@ -12,6 +13,7 @@ alerts_page_bp = Blueprint('alerts', __name__, url_prefix='/alerts')
 # =====================
 
 @alerts_api_bp.route('/', methods=['GET'])
+@login_or_jwt_required
 def get_alerts():
     alerts = Alert.query.order_by(Alert.timestamp.desc()).all()
     return jsonify([
@@ -29,6 +31,7 @@ def get_alerts():
     ])
 
 @alerts_api_bp.route('/', methods=['POST'])
+@login_or_jwt_required
 def create_alert():
     data = request.json
     alert = Alert(
@@ -57,6 +60,7 @@ def create_alert():
     return jsonify({'status': 'created', 'id': alert.id}), 201
 
 @alerts_api_bp.route('/<int:alert_id>/resolve', methods=['POST'])
+@login_or_jwt_required
 def resolve_alert(alert_id):
     alert = Alert.query.get_or_404(alert_id)
     alert.resolved = True
