@@ -4,6 +4,7 @@ from flask_login import login_required
 from app.models import Inmate
 from app.forms import UploadFaceForm
 from app.utils.embedding import extract_embedding_from_frame
+from app.models.facial_embedding import FacialEmbedding
 import numpy as np
 import cv2
 import pickle
@@ -65,7 +66,7 @@ def live_recognition():
     return render_template('recognition/live.html')
 
 
-# === API Endpoint: base64 image -> embedding -> identity prediction ===
+# === API Endpoint: base64 image -> embedding -> identity prediction + save ===
 @recognition_bp.route('/api/predict', methods=['POST'])
 def predict_identity_api():
     data = request.get_json()
@@ -73,19 +74,32 @@ def predict_identity_api():
         return jsonify({"error": "No image provided"}), 400
 
     try:
+        # Decode base64 image
         image_data = data['image'].split(',')[1]
         image_bytes = base64.b64decode(image_data)
         nparr = np.frombuffer(image_bytes, np.uint8)
         frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    except:
-        return jsonify({"error": "Invalid image format"}), 400
+    except Exception as e:
+        return jsonify({"error": "Invalid image format", "details": str(e)}), 400
 
+    # Extract embedding
     embedding = extract_embedding_from_frame(frame)
     if embedding is None:
         return jsonify({"error": "Failed to extract embedding"}), 500
 
     try:
+        # Predict identity
         pred_id = xgb_model.predict([embedding])[0]
+
+        # Save to DB
+        embedding_record = FacialEmbedding(
+            embedding=embedding,
+            predicted_id=pred_id,
+            camera_id=data.get('camera_id')  # Optional: React frontend should send this if available
+        )
+        db.session.add(embedding_record)
+        db.session.commit()
+
         return jsonify({"predicted_id": int(pred_id)})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

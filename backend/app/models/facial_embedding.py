@@ -1,13 +1,14 @@
 # app/models/facial_embedding.py
 from app import db
+from datetime import datetime
 
 class FacialEmbedding(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    inmate_id = db.Column(db.Integer, db.ForeignKey('inmate.id'), nullable=False)
     embedding = db.Column(db.PickleType, nullable=False)
-    image_name = db.Column(db.String(120))
-    timestamp = db.Column(db.DateTime, server_default=db.func.now())
-
+    predicted_id = db.Column(db.Integer, nullable=False)
+    camera_id = db.Column(db.String(100), nullable=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
     def to_dict(self):
         return {
             'id': self.id,

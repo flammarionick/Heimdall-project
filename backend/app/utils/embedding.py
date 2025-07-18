@@ -5,23 +5,28 @@ from torchvision import transforms
 import numpy as np
 import cv2
 
-# Load model once
+# Load models once
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-face_model = InceptionResnetV1(pretrained='vggface2').eval().to(device)
-
-transform = transforms.Compose([
-    transforms.ToPILImage(),
-    transforms.Resize((160, 160)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.5], [0.5])
-])
+mtcnn = MTCNN(image_size=160, margin=0, min_face_size=20, device=device)
+resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 
 def extract_embedding_from_frame(frame):
     try:
-        face_img = transform(frame).unsqueeze(0).to(device)
-        with torch.no_grad():
-            embedding = face_model(face_img).cpu().numpy()[0]
+        # Convert BGR (OpenCV) to RGB
+        img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Detect face and crop
+        face = mtcnn(img_rgb)
+        if face is None:
+            print("[Embedding] No face detected.")
+            return None
+
+        # Expand batch dim and move to device
+        face = face.unsqueeze(0).to(device)
+
+        # Extract embedding
+        embedding = resnet(face).detach().cpu().numpy()[0]
         return embedding
     except Exception as e:
-        print("Embedding extraction failed:", e)
+        print("[Embedding Error]:", e)
         return None
