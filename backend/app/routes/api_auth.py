@@ -2,6 +2,9 @@
 from app.utils.jwt import generate_jwt
 from app.utils.auth_helpers import login_or_jwt_required
 
+from flask import Blueprint, request, jsonify
+
+api_auth_bp = Blueprint('api_auth_bp', __name__)
 
 @api_auth_bp.route('/api/login', methods=['POST'])
 def api_login():

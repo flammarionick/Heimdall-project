@@ -2,6 +2,7 @@
 import torch
 from facenet_pytorch import InceptionResnetV1
 from torchvision import transforms
+from facenet_pytorch import MTCNN, InceptionResnetV1
 import numpy as np
 import cv2
 

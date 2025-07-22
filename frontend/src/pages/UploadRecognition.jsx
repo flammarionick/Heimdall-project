@@ -1,80 +1,94 @@
 // src/pages/UploadRecognition.jsx
-import { useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-export default function UploadRecognition() {
-  const [inmateName, setInmateName] = useState('');
-  const [location, setLocation] = useState('');
-  const [file, setFile] = useState(null);
-  const [status, setStatus] = useState('');
+const UploadRecognition = () => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [inmate, setInmate] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleFileChange = (e) => {
+    setSelectedFile(e.target.files[0]);
+    setInmate(null);
+    setError(null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file || !inmateName || !location) {
-      setStatus('Please fill all fields and choose an image.');
-      return;
-    }
+    if (!selectedFile) return;
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('inmate_name', inmateName);
-    formData.append('location', location);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Image = reader.result;
+      setLoading(true);
+      setError(null);
 
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/api/upload-recognition', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      setStatus(`Success: ${response.data.message}`);
-    } catch (err) {
-      setStatus('Upload failed.');
-      console.error(err);
-    }
+      try {
+        const res = await axios.post('http://localhost:5000/recognition/api/predict', {
+          image: base64Image,
+        });
+
+        if (res.data.inmate) {
+          setInmate(res.data.inmate);
+          // Auto-redirect after delay
+          setTimeout(() => {
+            navigate(`/inmates/${res.data.inmate.id}`, { state: { inmate: res.data.inmate } });
+          }, 2000);
+        } else {
+          setError(res.data.error || 'No match found.');
+        }
+      } catch (err) {
+        console.error(err);
+        setError('Prediction failed. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    reader.readAsDataURL(selectedFile);
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Upload Recognition Data</h1>
+    <div className="upload-page p-6 max-w-xl mx-auto">
+      <h2 className="text-xl font-semibold mb-4">Upload Face Image for Recognition</h2>
       <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded shadow">
-        <div>
-          <label className="block font-medium mb-1">Inmate Name</label>
-          <input
-            type="text"
-            value={inmateName}
-            onChange={(e) => setInmateName(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
-            required
-          />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Location / Camera Zone</label>
-          <input
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
-            required
-          />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Face Image</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setFile(e.target.files[0])}
-            className="w-full"
-            required
-          />
-        </div>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          required
+          className="w-full border rounded px-3 py-2"
+        />
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+          disabled={loading}
         >
-          Upload
+          {loading ? 'Processing...' : 'Submit'}
         </button>
-        {status && <p className="text-sm mt-2">{status}</p>}
       </form>
+
+      {loading && <p className="text-blue-500 mt-4 animate-pulse">🔄 Checking identity...</p>}
+      {error && <p className="text-red-600 mt-4">{error}</p>}
+
+      {inmate && (
+        <div className="mt-6 border p-4 rounded shadow bg-gray-50">
+          <h3 className="text-lg font-bold mb-2">✅ Match Found</h3>
+          <img
+            src={inmate.image_url}
+            alt={inmate.full_name}
+            className="w-32 h-32 object-cover rounded mb-2"
+          />
+          <p><strong>Name:</strong> {inmate.full_name}</p>
+          <p><strong>Age:</strong> {inmate.age}</p>
+          <p><strong>Location:</strong> {inmate.location}</p>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default UploadRecognition;

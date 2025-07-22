@@ -13,7 +13,7 @@ import base64
 recognition_bp = Blueprint('recognition', __name__, url_prefix='/recognition')
 
 # === Load XGBoost model once ===
-with open('models/best_xgb_model.pkl', 'rb') as f:
+with open('app/models/best_xgb_model.pkl', 'rb') as f:
     xgb_model = pickle.load(f)
 
 
