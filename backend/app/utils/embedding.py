@@ -1,33 +1,33 @@
-# app/utils/embedding.py
-import torch
+from flask import Flask, request, jsonify
 from facenet_pytorch import InceptionResnetV1
-from torchvision import transforms
-from facenet_pytorch import MTCNN, InceptionResnetV1
+import torch
 import numpy as np
+from PIL import Image
+import io
 import cv2
 
-# Load models once
+app = Flask(__name__)
+
+# Load model
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-mtcnn = MTCNN(image_size=160, margin=0, min_face_size=20, device=device)
-resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
+model = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 
-def extract_embedding_from_frame(frame):
-    try:
-        # Convert BGR (OpenCV) to RGB
-        img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+def preprocess_image(image_bytes):
+    img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+    img = np.array(img)
+    img = cv2.resize(img, (160, 160)) / 255.0
+    img = torch.tensor(img).permute(2, 0, 1).unsqueeze(0).float()
+    return img.to(device)
 
-        # Detect face and crop
-        face = mtcnn(img_rgb)
-        if face is None:
-            print("[Embedding] No face detected.")
-            return None
+@app.route('/encode', methods=['POST'])
+def encode():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image uploaded"}), 400
+    image = request.files['image'].read()
+    img_tensor = preprocess_image(image)
+    with torch.no_grad():
+        embedding = model(img_tensor).cpu().numpy().flatten().tolist()
+    return jsonify({"embedding": embedding})
 
-        # Expand batch dim and move to device
-        face = face.unsqueeze(0).to(device)
-
-        # Extract embedding
-        embedding = resnet(face).detach().cpu().numpy()[0]
-        return embedding
-    except Exception as e:
-        print("[Embedding Error]:", e)
-        return None
+if __name__ == '__main__':
+    app.run(port=5001)

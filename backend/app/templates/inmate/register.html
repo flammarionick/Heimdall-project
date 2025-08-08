@@ -1,33 +1,48 @@
 {% extends "layout.html" %}
+{% block title %}Register Inmate{% endblock %}
 
 {% block content %}
-<h2 class="text-2xl font-bold mb-6">Register New Inmate</h2>
+<div class="p-6 max-w-xl mx-auto">
+  <h2 class="text-2xl font-bold mb-6">Register New Inmate</h2>
 
-<form method="POST" enctype="multipart/form-data" class="space-y-4 max-w-xl">
-  {{ form.hidden_tag() }}
+  <form method="POST" enctype="multipart/form-data" class="space-y-4 bg-white p-4 rounded shadow">
+    {{ form.hidden_tag() }}
 
-  <div>
-    {{ form.full_name.label(class="block text-sm font-medium text-gray-700") }}
-    {{ form.full_name(class="mt-1 block w-full border rounded-md p-2") }}
-  </div>
+    <div>
+      {{ form.full_name.label(class="block text-sm font-medium text-gray-700") }}
+      {{ form.full_name(class="mt-1 block w-full border rounded-md p-2") }}
+      {% for e in form.full_name.errors %}
+        <p class="text-red-600 text-sm">{{ e }}</p>
+      {% endfor %}
+    </div>
 
-  <div>
-    <label for="prison_id" class="block text-sm font-medium text-gray-700">Prison ID / Reference Number</label>
-    <input type="text" name="prison_id" required class="mt-1 block w-full border rounded-md p-2" placeholder="Enter prison ID">
-  </div>
+    <div>
+      {{ form.prison_id.label(class="block text-sm font-medium text-gray-700") }}
+      {{ form.prison_id(class="mt-1 block w-full border rounded-md p-2") }}
+      {% for e in form.prison_id.errors %}
+        <p class="text-red-600 text-sm">{{ e }}</p>
+      {% endfor %}
+    </div>
 
-  <div>
-    {{ form.face_image.label(class="block text-sm font-medium text-gray-700") }}
-    {{ form.face_image(class="mt-1 block w-full border rounded-md p-2") }}
-  </div>
+    <div>
+      {{ form.face_image.label(class="block text-sm font-medium text-gray-700") }}
+      {{ form.face_image(class="mt-1 block w-full border rounded-md p-2") }}
+      {% for e in form.face_image.errors %}
+        <p class="text-red-600 text-sm">{{ e }}</p>
+      {% endfor %}
+    </div>
 
-  <div>
-    <label for="duration_months" class="block text-sm font-medium text-gray-700">Duration (in months)</label>
-    <input type="number" name="duration_months" required class="mt-1 block w-full border rounded-md p-2" placeholder="Enter duration">
-  </div>
+    <div>
+      {{ form.duration_months.label(class="block text-sm font-medium text-gray-700") }}
+      {{ form.duration_months(class="mt-1 block w-full border rounded-md p-2") }}
+      {% for e in form.duration_months.errors %}
+        <p class="text-red-600 text-sm">{{ e }}</p>
+      {% endfor %}
+    </div>
 
-  <div>
-    {{ form.submit(class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700") }}
-  </div>
-</form>
+    <div>
+      {{ form.submit(class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700") }}
+    </div>
+  </form>
+</div>
 {% endblock %}
