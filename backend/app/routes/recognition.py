@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_required
 from app.models import Inmate
 from app.forms import UploadFaceForm
-from app.utils.embedding import extract_embedding_from_frame
+from app.utils.embedding_client import extract_embedding_from_frame
 from app.models.facial_embedding import FacialEmbedding
 import numpy as np
 import cv2
