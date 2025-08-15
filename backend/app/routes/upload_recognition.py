@@ -10,18 +10,22 @@ upload_bp = Blueprint('upload_recognition', __name__, url_prefix='/api')
 UPLOAD_FOLDER = 'dataset'  # or wherever you store training data
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-def allowed_file(filename):
+def allowed_file(filename: str) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @upload_bp.route('/upload-recognition', methods=['POST'])
 @login_or_jwt_required
 def upload_face():
+    """
+    Saves a labeled face image under dataset/<inmate_name>/<inmate_name>_<timestamp>.jpg
+    Returns JSON with the saved path. Emits 'face_uploaded' via Socket.IO (best-effort).
+    """
     file = request.files.get('file')
     inmate_name = request.form.get('inmate_name')
     location = request.form.get('location')
 
     if not file or not inmate_name or not location:
-        return jsonify({"error": "Missing required fields"}), 400
+        return jsonify({"error": "Missing required fields: file, inmate_name, location"}), 400
 
     if not allowed_file(file.filename):
         return jsonify({"error": "Unsupported file type"}), 400
@@ -34,15 +38,22 @@ def upload_face():
     filepath = os.path.join(inmate_dir, filename)
     file.save(filepath)
 
-    # Optional: emit socket event
+    # Optional: emit socket event (best-effort)
     try:
         from run import socketio
         socketio.emit('face_uploaded', {
             'inmate_name': inmate_name,
             'location': location,
-            'file': filename
+            'file': filename,
+            'path': filepath
         })
     except Exception as e:
-        print("Socket emit failed:", e)
+        print("[upload_recognition] Socket emit failed:", e)
 
-    return jsonify({"message": f"Face data saved for {inmate_name}", "path": filepath}), 201
+    return jsonify({
+        "message": f"Face data saved for {inmate_name}",
+        "inmate_name": inmate_name,
+        "location": location,
+        "filename": filename,
+        "path": filepath
+    }), 201
