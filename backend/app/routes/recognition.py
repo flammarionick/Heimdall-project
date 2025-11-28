@@ -3,7 +3,6 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_required
 from app.models.inmate import Inmate
 from app.forms import UploadFaceForm
-from app.utils.embedding_client import extract_embedding_from_frame
 from app import db
 
 import numpy as np
@@ -11,29 +10,23 @@ import cv2
 import pickle
 import base64
 import logging
-from typing import Optional
+from typing import Optional, Tuple, Union
+
+from app.utils.hog_features import extract_hog_3060
 
 recognition_bp = Blueprint('recognition', __name__, url_prefix='/recognition')
-
-# Marker so you can confirm the right file is loaded in logs.
-logging.getLogger().warning("[recognition] Loaded: NO history-table version")
 
 # === Load XGBoost model once ===
 with open('app/models/best_xgb_model.pkl', 'rb') as f:
     xgb_model = pickle.load(f)
 
-# Your older model wanted 3060 features; fall back to that if attribute not present.
-DEFAULT_EXPECTED_DIM = 3060
-EXPECTED_DIM = getattr(xgb_model, 'n_features_in_', DEFAULT_EXPECTED_DIM)
+EXPECTED_DIM = getattr(xgb_model, 'n_features_in_', 3060)
+CLASSES = getattr(xgb_model, 'classes_', None)  # could be ints or strings (names)
 
+# Face detector
+FACE_CASCADE = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 def _adapt_vector_dim(vec: np.ndarray, target_dim: int) -> np.ndarray:
-    """
-    Ensure 1D vector 'vec' is exactly 'target_dim' long:
-      - If shorter: zero-pad at the end
-      - If longer : truncate
-    Returns shape (target_dim,)
-    """
     v = np.asarray(vec, dtype=float).ravel()
     if v.size == target_dim:
         return v
@@ -43,26 +36,84 @@ def _adapt_vector_dim(vec: np.ndarray, target_dim: int) -> np.ndarray:
         return out
     return v[:target_dim]
 
+def _detect_face_crop(bgr: np.ndarray) -> np.ndarray:
+    gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+    faces = FACE_CASCADE.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(60, 60))
+    if len(faces) > 0:
+        x, y, w, h = max(faces, key=lambda r: r[2] * r[3])
+        pad = int(0.15 * max(w, h))
+        x1 = max(0, x - pad); y1 = max(0, y - pad)
+        x2 = min(bgr.shape[1], x + w + pad); y2 = min(bgr.shape[0], y + h + pad)
+        crop = bgr[y1:y2, x1:x2]
+        if crop.size > 0:
+            return crop
+    # centered square fallback
+    h, w = bgr.shape[:2]
+    side = min(h, w)
+    cy, cx = h // 2, w // 2
+    half = side // 2
+    return bgr[cy - half:cy + half, cx - half:cx + half]
 
-def _extract_embedding_from_upload(file_storage) -> Optional[np.ndarray]:
+def _preprocess_for_hog(bgr: np.ndarray) -> np.ndarray:
+    face = _detect_face_crop(bgr)
+    face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+    face = cv2.equalizeHist(face)
+    face = cv2.cvtColor(face, cv2.COLOR_GRAY2BGR)
+    feat = extract_hog_3060(face).astype(np.float32)
+    feat = _adapt_vector_dim(feat, EXPECTED_DIM)
+    return feat
+
+def _predict_with_conf(
+    feature_vec: np.ndarray, proba_threshold: float = 0.60
+) -> Tuple[Optional[Union[int, str]], Optional[float], Optional[np.ndarray]]:
     """
-    Reads uploaded image (FileStorage), decodes to BGR frame, calls embedding service,
-    returns numpy array embedding (e.g., 512-d from FaceNet). Returns None on failure.
+    Returns (raw_label, confidence, proba_vector). raw_label is either an int (class id) or str (name),
+    depending on how the model was trained. If confidence < threshold -> (None, conf, proba).
     """
+    X = feature_vec.reshape(1, -1)
+    conf = None
+    proba = None
     try:
-        file_storage.stream.seek(0)
-        file_bytes = np.frombuffer(file_storage.read(), np.uint8)
-        frame = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-        if frame is None:
-            return None
-        emb = extract_embedding_from_frame(frame)  # list[float] from /encode
-        if emb is None:
-            return None
-        return np.array(emb, dtype=float)
-    except Exception as e:
-        logging.exception("Embedding extraction failed: %s", e)
-        return None
+        proba = xgb_model.predict_proba(X)  # shape (1, n_classes)
+        conf = float(np.max(proba))
+        pred_idx = int(np.argmax(proba))
+        if CLASSES is not None:
+            raw_label = CLASSES[pred_idx]  # could be int or str
+        else:
+            raw_label = pred_idx
+        if conf < proba_threshold:
+            return None, conf, proba
+        return raw_label, conf, proba
+    except Exception:
+        pred = xgb_model.predict(X)[0]
+        return pred, None, None
 
+def _lookup_inmate_from_label(raw_label: Union[int, str]):
+    """
+    Map model's raw label to an Inmate. If label is int, treat as DB id.
+    If label is str, match by name (full_name first, then name).
+    """
+    if isinstance(raw_label, (int, np.integer)):
+        return Inmate.query.get(int(raw_label))
+    # string label -> try full_name then name (case-insensitive)
+    label_str = str(raw_label).strip()
+    inmate = Inmate.query.filter(Inmate.full_name.ilike(label_str)).first()
+    if inmate:
+        return inmate
+    inmate = Inmate.query.filter(Inmate.name.ilike(label_str)).first()
+    return inmate
+
+def _debug_proba(proba: Optional[np.ndarray]):
+    if proba is None:
+        return "no-proba"
+    vec = proba.ravel()
+    topk = min(5, vec.size)
+    idxs = np.argsort(-vec)[:topk]
+    parts = []
+    for i in idxs:
+        cls = CLASSES[i] if CLASSES is not None else i
+        parts.append(f"{cls}:{vec[i]:.2f}")
+    return " | ".join(parts)
 
 # === Web Route: Upload image and predict identity ===
 @recognition_bp.route('/upload', methods=['GET', 'POST'])
@@ -77,58 +128,49 @@ def upload_recognition():
             return redirect(request.url)
 
         try:
-            # 1) Extract embedding (typically 512-d)
-            embedding = _extract_embedding_from_upload(file)
-            if embedding is None:
-                flash('Embedding extraction failed (no face detected?).', 'danger')
+            file.stream.seek(0)
+            file_bytes = np.frombuffer(file.read(), np.uint8)
+            img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+            if img is None:
+                flash('Could not decode image.', 'danger')
                 return redirect(request.url)
 
-            # 2) Adapt to model's expected dimension (e.g., 3060)
-            emb_vec = _adapt_vector_dim(embedding, EXPECTED_DIM)
+            feat = _preprocess_for_hog(img)
+            raw_label, conf, proba = _predict_with_conf(feat, proba_threshold=0.60)
 
-            # 3) Predict ID
-            predicted_id = int(xgb_model.predict(emb_vec.reshape(1, -1))[0])
+            logging.info("[recognition] classes_type=%s len=%s expected_dim=%s top=%s",
+                         type(CLASSES).__name__, None if CLASSES is None else len(CLASSES),
+                         EXPECTED_DIM, _debug_proba(proba))
 
-            # 4) Find inmate and save latest embedding directly on inmate.face_encoding
-            matched_inmate = Inmate.query.get(predicted_id)
-            if matched_inmate:
-                try:
-                    matched_inmate.face_encoding = embedding.tolist()  # store original 512-d vector
-                    db.session.commit()
-                except Exception as e:
-                    logging.warning("Could not update Inmate.face_encoding: %s", e)
-                    db.session.rollback()
+            if raw_label is None:
+                flash('No confident match found.', 'warning')
+                return redirect(url_for('recognition.upload_recognition'))
 
-                display_name = getattr(matched_inmate, "full_name", None) or getattr(matched_inmate, "name", f"ID {predicted_id}")
-                flash(f'Match found: {display_name}', 'success')
+            inmate = _lookup_inmate_from_label(raw_label)
+            if inmate:
+                name = getattr(inmate, "full_name", None) or getattr(inmate, "name", f"ID {inmate.id}")
+                if conf is not None:
+                    flash(f"Match: {name} (confidence {conf:.2f})", 'success')
+                else:
+                    flash(f"Match: {name}", 'success')
             else:
-                flash('No matching inmate found for predicted ID.', 'warning')
+                flash(f"Predicted: {raw_label} (no matching inmate record)", 'warning')
 
         except Exception as e:
             logging.exception("[ERROR during recognition]: %s", e)
-            db.session.rollback()
             flash('Recognition failed. Please try again.', 'danger')
 
         return redirect(url_for('recognition.upload_recognition'))
 
     return render_template('recognition/upload.html', form=form)
 
-
-# === Web Route: Live recognition placeholder ===
-@recognition_bp.route('/live')
-@login_required
-def live_recognition():
-    return render_template('recognition/live.html')
-
-
-# === API Endpoint: base64 image -> embedding -> identity prediction (also save on inmate) ===
+# === API Endpoint: base64 image -> prediction ===
 @recognition_bp.route('/api/predict', methods=['POST'])
 def predict_identity_api():
     data = request.get_json() or {}
     if 'image' not in data:
         return jsonify({"error": "No image provided"}), 400
 
-    # Accept data URLs and plain base64
     try:
         image_b64 = data['image']
         if ',' in image_b64:
@@ -141,38 +183,29 @@ def predict_identity_api():
     except Exception as e:
         return jsonify({"error": "Invalid image format", "details": str(e)}), 400
 
-    # 1) Extract embedding
-    embedding_list = extract_embedding_from_frame(frame)
-    if embedding_list is None:
-        return jsonify({"error": "Failed to extract embedding"}), 500
-
     try:
-        embedding = np.array(embedding_list, dtype=float)
-        emb_vec = _adapt_vector_dim(embedding, EXPECTED_DIM)
+        feat = _preprocess_for_hog(frame)
+        raw_label, conf, proba = _predict_with_conf(feat, proba_threshold=0.60)
 
-        # 2) Predict identity
-        pred_id = int(xgb_model.predict(emb_vec.reshape(1, -1))[0])
+        logging.info("[recognition/api] top=%s", _debug_proba(proba))
 
-        # 3) Save/update embedding on the matched inmate (if exists)
-        payload = {"predicted_id": pred_id, "inmate": None}
-        inmate = Inmate.query.get(pred_id)
+        if raw_label is None:
+            return jsonify({"status": "no_confident_match", "confidence": conf}), 200
+
+        inmate = _lookup_inmate_from_label(raw_label)
         if inmate:
-            try:
-                inmate.face_encoding = embedding.tolist()
-                db.session.commit()
-            except Exception as e:
-                logging.warning("Could not update Inmate.face_encoding: %s", e)
-                db.session.rollback()
-
-            payload["inmate"] = {
-                "id": inmate.id,
-                "name": getattr(inmate, "full_name", None) or getattr(inmate, "name", None),
-                "status": getattr(inmate, "status", None),
-            }
-
-        return jsonify(payload), 200
+            return jsonify({
+                "predicted_id": inmate.id,
+                "predicted_label": str(raw_label),
+                "confidence": conf,
+                "inmate": {
+                    "id": inmate.id,
+                    "name": getattr(inmate, "full_name", None) or getattr(inmate, "name", ""),
+                }
+            })
+        else:
+            return jsonify({"predicted_label": str(raw_label), "confidence": conf, "status": "no_inmate_row"}), 200
 
     except Exception as e:
         logging.exception("Prediction error: %s", e)
-        db.session.rollback()
         return jsonify({"error": str(e)}), 500
