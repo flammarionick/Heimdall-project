@@ -1,1 +1,103 @@
+# ================================
+#   PYTHON / FLASK BACKEND
+# ================================
+
+# Virtual environment
 venv/
+.env
+*.env
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+*$py.class
+
+# Flask instance folder
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Model artifacts — DO NOT COMMIT
+app/models/*.h5
+app/models/*.pkl
+app/models/*.joblib
+app/models/*.pt
+app/models/*.pth
+
+# Embeddings / face encodings
+app/static/inmate_images/
+app/data/
+dataset/
+uploads/
+media/
+tmp/
+temp/
+logs/
+*.log
+
+# Large numpy/pickle dumps
+*.npy
+*.npz
+*.pickle
+*.pkl
+
+# Backup files
+*.bak
+*.old
+*.orig
+*.swp
+
+# Security — never push keys
+secret.key
+settings.json
+
+# ================================
+# Node / React FRONTEND
+# ================================
+frontend/node_modules/
+frontend/.env
+frontend/build/
+frontend/dist/
+frontend/.parcel-cache/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.cache/
+
+# ================================
+# TESTS / OUTPUT
+# ================================
+tests/__pycache__/
+coverage/
+htmlcov/
+.pytest_cache/
+.tox/
+
+# ================================
+# SYSTEM FILES (Windows/Mac/Linux)
+# ================================
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.tmp
+
+# ================================
+# JUPYTER / RESEARCH NOTEBOOKS
+# ================================
+.ipynb_checkpoints
+
+# ================================
+# IMPORTANT EXCLUSIONS (DO NOT DELETE)
+# keep your important schema + seed scripts
+# ================================
+!backend/scripts/
+!backend/app/models/
