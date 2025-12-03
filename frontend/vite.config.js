@@ -1,17 +1,38 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  
+  // Development server configuration
   server: {
+    port: 5173,
+    cors: true,
     proxy: {
+      // Proxy API requests to Flask backend
       '/api': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://localhost:5000',
         changeOrigin: true,
-        secure: false,
+      },
+      '/auth': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
       }
+    }
+  },
+  
+  // Build configuration
+  build: {
+    // Output directory (Flask will serve from here)
+    outDir: 'dist',
+    assetsDir: 'assets',
+    
+    // Generate manifest for asset paths
+    manifest: true,
+    
+    rollupOptions: {
+      input: './src/main.jsx'
     }
   }
 })
-

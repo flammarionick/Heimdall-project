@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heimdall Security System</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10'/%3E%3C/svg%3E">
+    
+    <!-- Development: Vite dev server -->
+    {% if config.DEBUG %}
+        <script type="module" src="http://localhost:5173/@vite/client"></script>
+        <script type="module" src="http://localhost:5173/src/main.jsx"></script>
+    {% else %}
+        <!-- Production: Built assets -->
+        <script type="module" crossorigin src="{{ url_for('static', filename='assets/index.js') }}"></script>
+        <link rel="stylesheet" href="{{ url_for('static', filename='assets/index.css') }}">
+    {% endif %}
+</head>
+<body>
+    <!-- React app mounts here -->
+    <div id="root"></div>
+    
+    <!-- Pass Flask session data to React (optional) -->
+    <script>
+        window.__INITIAL_STATE__ = {{ {
+            'user': {
+                'id': session.get('user_id'),
+                'username': session.get('username', ''),
+                'isAdmin': session.get('is_admin', False)
+            }
+        } | tojson | safe }};
+    </script>
+</body>
+</html>

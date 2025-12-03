@@ -1,17 +1,157 @@
 {% extends 'base_login.html' %}
 {% block title %}Login - Heimdall{% endblock %}
+
 {% block content %}
-  <h2>Login</h2>
-  <form method="POST">
-    {{ form.hidden_tag() }}
-    <div class="form-group">
-      {{ form.username.label }} {{ form.username(size=32) }}
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+  <!-- Animated background elements -->
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute -top-40 -right-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+    <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style="animation-delay: 4s;"></div>
+  </div>
+
+  <!-- Login Card -->
+  <div class="relative w-full max-w-md">
+    <!-- Logo/Brand Section -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl shadow-2xl mb-4 transform hover:scale-105 transition-transform">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
+        </svg>
+      </div>
+      <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">Heimdall</h1>
+      <p class="text-blue-200 text-sm">Secure Inmate Recognition System</p>
     </div>
-    <div class="form-group">
-      {{ form.password.label }} {{ form.password(size=32) }}
+
+    <!-- Glass morphism card -->
+    <div class="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
+      <form method="POST" class="space-y-6">
+        {{ form.hidden_tag() }}
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="p-4 rounded-xl {% if category == 'error' %}bg-red-500/20 border border-red-400/50 text-red-100{% else %}bg-green-500/20 border border-green-400/50 text-green-100{% endif %}">
+                <p class="text-sm">{{ message }}</p>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Username Field -->
+        <div class="space-y-2">
+          <label for="username" class="text-sm font-semibold text-white/90 block">
+            Username or Email
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-300">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            {{ form.username(
+              class="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all backdrop-blur-sm",
+              placeholder="admin@heimdall.com"
+            ) }}
+          </div>
+          {% if form.username.errors %}
+            <div class="text-red-300 text-sm mt-1">
+              {% for error in form.username.errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Password Field -->
+        <div class="space-y-2">
+          <label for="password" class="text-sm font-semibold text-white/90 block">
+            Password
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-300">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            {{ form.password(
+              class="w-full pl-12 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all backdrop-blur-sm",
+              placeholder="Enter your password",
+              id="password-field"
+            ) }}
+            <button type="button" title="Toggle password visibility" aria-label="Toggle password visibility" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-blue-300 hover:text-blue-200 transition-colors">
+              <span class="sr-only">Toggle password visibility</span>
+              <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg id="eye-off-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+                <line x1="2" x2="22" y1="2" y2="22"/>
+              </svg>
+            </button>
+          </div>
+          {% if form.password.errors %}
+            <div class="text-red-300 text-sm mt-1">
+              {% for error in form.password.errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Remember Me & Forgot Password -->
+        <div class="flex items-center justify-between text-sm">
+          <label class="flex items-center text-blue-200 cursor-pointer hover:text-white transition-colors">
+            <input type="checkbox" class="mr-2 rounded" name="remember_me">
+            Remember me
+          </label>
+          <a href="#" class="text-blue-300 hover:text-blue-200 font-medium transition-colors">
+            Forgot password?
+          </a>
+        </div>
+
+        <!-- Submit Button -->
+        {{ form.submit(
+          class="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all cursor-pointer"
+        ) }}
+      </form>
+
+      <!-- Additional Info -->
+      <div class="mt-6 pt-6 border-t border-white/10 text-center">
+        <p class="text-blue-200/70 text-sm">
+          Protected by enterprise-grade security
+        </p>
+      </div>
     </div>
-    <div class="form-group">
-      {{ form.submit() }}
+
+    <!-- Footer -->
+    <div class="text-center mt-6 text-blue-200/60 text-xs">
+      <p>© 2024 Heimdall Security System. All rights reserved.</p>
     </div>
-  </form>
+  </div>
+</div>
+
+<script>
+  function togglePassword() {
+    const passwordField = document.getElementById('password-field');
+    const eyeIcon = document.getElementById('eye-icon');
+    const eyeOffIcon = document.getElementById('eye-off-icon');
+    
+    if (passwordField.type === 'password') {
+      passwordField.type = 'text';
+      eyeIcon.classList.add('hidden');
+      eyeOffIcon.classList.remove('hidden');
+    } else {
+      passwordField.type = 'password';
+      eyeIcon.classList.remove('hidden');
+      eyeOffIcon.classList.add('hidden');
+    }
+  }
+</script>
 {% endblock %}

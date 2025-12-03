@@ -7,6 +7,9 @@ from app import db, login_manager
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")  # change if needed
+
+
 # 🎯 Route for frontend React API login
 @auth_bp.route('/api/login', methods=['POST'])
 def api_login():
@@ -46,26 +49,15 @@ def api_login():
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-
-    if request.method == 'POST' and form.validate_on_submit():
-        input_value = form.username.data or form.email.data
-        user = User.query.filter(
-            (User.username == input_value) | (User.email == input_value)
-        ).first()
-
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
-            if user.is_suspended:
-                flash('Account suspended. Contact Admin.', 'danger')
-                return redirect(url_for('auth.login'))
-
             login_user(user)
-            flash('Logged in successfully.', 'success')
-            return redirect(url_for('admin_dashboard.dashboard_view') if user.is_admin else '/dashboard/')
-        flash('Invalid username or password.', 'danger')
-
+            # 🔁 Redirect straight to React AdminDashboard.jsx
+            return redirect(f"{FRONTEND_URL}/admin/dashboard")
+        else:
+            flash('Invalid credentials', 'danger')
     return render_template('auth/login.html', form=form)
-
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
