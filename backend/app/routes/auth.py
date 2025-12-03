@@ -4,7 +4,7 @@ from flask_login import login_user, logout_user, login_required
 from app.models.user import User
 from app.forms import LoginForm
 from app import db, login_manager
-
+import os
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")  # change if needed
@@ -53,11 +53,12 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
-            # 🔁 Redirect straight to React AdminDashboard.jsx
+            # Redirect to React admin screen
             return redirect(f"{FRONTEND_URL}/admin/dashboard")
         else:
             flash('Invalid credentials', 'danger')
     return render_template('auth/login.html', form=form)
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
