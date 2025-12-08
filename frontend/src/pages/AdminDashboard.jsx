@@ -23,7 +23,9 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+// IMPORTANT: use the same host you see in the Flask logs: http://127.0.0.1:5000
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -43,17 +45,23 @@ export default function AdminDashboard() {
       try {
         const res = await fetch(`${API_BASE}/admin/api/stats`, {
           method: "GET",
-          credentials: "include",
+          credentials: "include", // send cookies
           headers: {
             Accept: "application/json",
           },
         });
 
         const contentType = res.headers.get("content-type") || "";
+
+        // If we got HTML instead of JSON, it’s almost always the login page
         if (!contentType.includes("application/json")) {
           const text = await res.text();
+          console.error(
+            "Non-JSON response from /admin/api/stats:",
+            text.slice(0, 200)
+          );
           throw new Error(
-            `Expected JSON, got non-JSON response: ${text.slice(0, 200)}`
+            "Expected JSON, got non-JSON response (probably login HTML)"
           );
         }
 
@@ -62,6 +70,21 @@ export default function AdminDashboard() {
         if (!res.ok) {
           throw new Error(data.error || `HTTP ${res.status}`);
         }
+
+        // At this point data is like:
+        // {
+        //   active_users: 1,
+        //   camera_counts: [],
+        //   camera_labels: [],
+        //   inmate_status: [...],
+        //   matches_over_time: [...],
+        //   suspended_users: 0,
+        //   total_alerts: 0,
+        //   total_cameras: 0,
+        //   total_inmates: 101,
+        //   total_users: 1
+        // }
+        console.log("Loaded stats:", data);
 
         setStats((prev) => ({
           ...prev,
@@ -254,9 +277,8 @@ export default function AdminDashboard() {
               <div className="text-center p-4 bg-green-50 rounded-xl col-span-2">
                 <Activity className="w-8 h-8 text-green-600 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-gray-800">
-                  {/* Example derived metric */}
                   {stats.matches_over_time.reduce(
-                    (sum, m) => sum + m.count,
+                    (sum, m) => sum + (m.count || 0),
                     0
                   ) || 0}
                 </p>
