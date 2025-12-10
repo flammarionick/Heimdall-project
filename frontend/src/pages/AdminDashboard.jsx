@@ -1,5 +1,5 @@
 // src/pages/AdminDashboard.jsx
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -21,11 +21,14 @@ import {
   Activity,
   Clock,
   CheckCircle,
+  Menu,
+  X,
+  Monitor,
+  Video,
+  LogOut,
 } from "lucide-react";
 
-// IMPORTANT: use the same host you see in the Flask logs: http://127.0.0.1:5000
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000";
+const BACKEND_BASE_URL = "http://127.0.0.1:5000";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -38,67 +41,74 @@ export default function AdminDashboard() {
     matches_over_time: [],
     inmate_status: [],
   });
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    async function fetchStats() {
-      try {
-        const res = await fetch(`${API_BASE}/admin/api/stats`, {
-          method: "GET",
-          credentials: "include", // send cookies
-          headers: {
-            Accept: "application/json",
-          },
-        });
-
-        const contentType = res.headers.get("content-type") || "";
-
-        // If we got HTML instead of JSON, it’s almost always the login page
-        if (!contentType.includes("application/json")) {
-          const text = await res.text();
-          console.error(
-            "Non-JSON response from /admin/api/stats:",
-            text.slice(0, 200)
-          );
-          throw new Error(
-            "Expected JSON, got non-JSON response (probably login HTML)"
-          );
-        }
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || `HTTP ${res.status}`);
-        }
-
-        // At this point data is like:
-        // {
-        //   active_users: 1,
-        //   camera_counts: [],
-        //   camera_labels: [],
-        //   inmate_status: [...],
-        //   matches_over_time: [...],
-        //   suspended_users: 0,
-        //   total_alerts: 0,
-        //   total_cameras: 0,
-        //   total_inmates: 101,
-        //   total_users: 1
-        // }
-        console.log("Loaded stats:", data);
-
-        setStats((prev) => ({
-          ...prev,
-          ...data,
-        }));
-        setError("");
-      } catch (err) {
-        console.error("Could not load stats:", err);
-        setError("Could not load analytics");
-      }
-    }
-
     fetchStats();
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await fetch(`${BACKEND_BASE_URL}/admin/api/stats2`, {
+        method: "GET",
+        credentials: "include", // safe even if endpoint is public
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+
+      if (!res.ok) {
+        if (contentType.includes("application/json")) {
+          const data = await res.json();
+          const msg =
+            data.error ||
+            data.detail ||
+            `Request failed with status ${res.status}`;
+          throw new Error(msg);
+        } else {
+          throw new Error(
+            `Request failed with status ${res.status} and non-JSON response`
+          );
+        }
+      }
+
+      if (!contentType.includes("application/json")) {
+        throw new Error(
+          "Expected JSON, got non-JSON response (possibly HTML error page)."
+        );
+      }
+
+      const data = await res.json();
+
+      setStats((prev) => ({
+        ...prev,
+        total_users: data.total_users ?? 0,
+        active_users: data.active_users ?? 0,
+        suspended_users: data.suspended_users ?? 0,
+        total_cameras: data.total_cameras ?? 0,
+        total_alerts: data.total_alerts ?? 0,
+        total_inmates: data.total_inmates ?? 0,
+        matches_over_time: Array.isArray(data.matches_over_time)
+          ? data.matches_over_time
+          : [],
+        inmate_status: Array.isArray(data.inmate_status)
+          ? data.inmate_status
+          : [],
+      }));
+    } catch (err) {
+      console.error("Could not load stats:", err);
+      setError(err.message || "Could not load analytics");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const StatCard = ({ icon: Icon, title, value, change, color, bgColor }) => (
     <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] border border-gray-100">
@@ -106,58 +116,150 @@ export default function AdminDashboard() {
         <div className={`p-3 rounded-xl ${bgColor}`}>
           <Icon className={`w-6 h-6 ${color}`} />
         </div>
-        {change !== undefined && (
+        {change !== undefined && change !== null && (
           <div className="flex items-center text-sm">
             <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-            <span className="text-green-600 font-semibold">
-              {change}%
-            </span>
+            <span className="text-green-600 font-semibold">{change}%</span>
           </div>
         )}
       </div>
       <h3 className="text-gray-500 text-sm font-medium mb-1">{title}</h3>
       <p className="text-3xl font-bold text-gray-800">
-        {(value ?? 0).toLocaleString()}
+        {Number(value || 0).toLocaleString()}
       </p>
     </div>
   );
 
   const COLORS = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b"];
 
+  const totalMatches =
+    stats.matches_over_time?.reduce((sum, m) => sum + (m.count || 0), 0) || 0;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        {/* Top bar with logo + hamburger */}
+        <header className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
             <div>
-              <h1 className="text-4xl font-bold text-gray-800 mb-2">
-                Admin Dashboard
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+                Heimdall Admin
               </h1>
-              <p className="text-gray-600 flex items-center">
-                <Activity className="w-4 h-4 mr-2" />
+              <p className="text-xs md:text-sm text-gray-500">
                 Real-time security monitoring and analytics
               </p>
-              {error && (
-                <p className="mt-3 text-sm text-red-600 font-medium">
-                  {error}
-                </p>
-              )}
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="bg-white px-4 py-2 rounded-xl shadow-md flex items-center">
-                <Clock className="w-4 h-4 text-blue-500 mr-2" />
-                <span className="text-sm font-medium text-gray-700">
-                  {new Date().toLocaleDateString("en-US", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
             </div>
           </div>
+
+          <div className="flex items-center space-x-3">
+            {/* Date pill */}
+            <div className="hidden sm:flex items-center bg-white rounded-xl px-3 py-2 shadow">
+              <Clock className="w-4 h-4 text-blue-500 mr-2" />
+              <span className="text-xs md:text-sm font-medium text-gray-700">
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
+
+            {/* Hamburger menu */}
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-md border border-gray-100 hover:bg-gray-50 transition"
+            >
+              {menuOpen ? (
+                <X className="w-5 h-5 text-gray-700" />
+              ) : (
+                <Menu className="w-5 h-5 text-gray-700" />
+              )}
+            </button>
+          </div>
+        </header>
+
+        {/* Hamburger dropdown menu */}
+        {menuOpen && (
+          <div className="mb-6">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-3 sm:p-4">
+              <nav className="flex flex-col sm:flex-row sm:flex-wrap gap-2 text-sm text-gray-700">
+                {/* React routes */}
+                <a
+                  href="/admin/dashboard"
+                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
+                >
+                  <Monitor className="w-4 h-4 mr-2 text-blue-500" />
+                  Dashboard (React)
+                </a>
+
+                {/* Existing Flask pages */}
+                <a
+                  href={`${BACKEND_BASE_URL}/recognition/live`}
+                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
+                >
+                  <Video className="w-4 h-4 mr-2 text-purple-500" />
+                  Live Recognition (Flask)
+                </a>
+
+                <a
+                  href={`${BACKEND_BASE_URL}/recognition/upload`}
+                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
+                >
+                  <Camera className="w-4 h-4 mr-2 text-indigo-500" />
+                  Upload Recognition (Flask)
+                </a>
+
+                <a
+                  href={`${BACKEND_BASE_URL}/inmates`}
+                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
+                >
+                  <Users className="w-4 h-4 mr-2 text-emerald-500" />
+                  Inmate Profiles (Flask)
+                </a>
+
+                <a
+                  href={`${BACKEND_BASE_URL}/alerts`}
+                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
+                >
+                  <AlertTriangle className="w-4 h-4 mr-2 text-orange-500" />
+                  Alerts & Logs (Flask)
+                </a>
+
+                <a
+                  href={`${BACKEND_BASE_URL}/auth/logout`}
+                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50 sm:ml-auto"
+                >
+                  <LogOut className="w-4 h-4 mr-2 text-red-500" />
+                  Logout
+                </a>
+              </nav>
+            </div>
+          </div>
+        )}
+
+        {/* Error banner */}
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <strong className="font-semibold">Could not load analytics: </strong>
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Main content */}
+        <div className="mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+            Admin Dashboard
+          </h2>
+          <p className="text-gray-600 flex items-center">
+            <Activity className="w-4 h-4 mr-2 text-blue-500" />
+            {loading
+              ? "Loading analytics…"
+              : "Real-time security monitoring and analytics"}
+          </p>
         </div>
 
         {/* Stats Grid */}
@@ -205,7 +307,7 @@ export default function AdminDashboard() {
               <div className="flex items-center">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
                 <span className="text-sm text-green-600 font-medium">
-                  Operational
+                  {loading ? "Loading…" : "Operational"}
                 </span>
               </div>
             </div>
@@ -213,9 +315,7 @@ export default function AdminDashboard() {
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-600">Detection Accuracy</span>
-                  <span className="font-semibold text-gray-800">
-                    94.2%
-                  </span>
+                  <span className="font-semibold text-gray-800">94.2%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
@@ -227,9 +327,7 @@ export default function AdminDashboard() {
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-600">System Uptime</span>
-                  <span className="font-semibold text-gray-800">
-                    99.8%
-                  </span>
+                  <span className="font-semibold text-gray-800">99.8%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
@@ -241,9 +339,7 @@ export default function AdminDashboard() {
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-600">Response Time</span>
-                  <span className="font-semibold text-gray-800">
-                    0.3s
-                  </span>
+                  <span className="font-semibold text-gray-800">0.3s</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
@@ -263,28 +359,23 @@ export default function AdminDashboard() {
               <div className="text-center p-4 bg-blue-50 rounded-xl">
                 <Shield className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-gray-800">
-                  {stats.total_inmates ?? 0}
+                  {stats.total_inmates}
                 </p>
                 <p className="text-sm text-gray-600">Total Inmates</p>
               </div>
               <div className="text-center p-4 bg-red-50 rounded-xl">
                 <AlertTriangle className="w-8 h-8 text-red-600 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-gray-800">
-                  {stats.suspended_users ?? 0}
+                  {stats.suspended_users}
                 </p>
                 <p className="text-sm text-gray-600">Suspended Users</p>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-xl col-span-2">
                 <Activity className="w-8 h-8 text-green-600 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-gray-800">
-                  {stats.matches_over_time.reduce(
-                    (sum, m) => sum + (m.count || 0),
-                    0
-                  ) || 0}
+                  {totalMatches.toLocaleString()}
                 </p>
-                <p className="text-sm text-gray-600">
-                  Matches (shown period)
-                </p>
+                <p className="text-sm text-gray-600">Matches (shown period)</p>
               </div>
             </div>
           </div>

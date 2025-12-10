@@ -1,68 +1,57 @@
 # app/__init__.py
-from flask import Flask, render_template, redirect, url_for
+import os
 from dotenv import load_dotenv
-from flask_socketio import SocketIO
+from flask import Flask, redirect, url_for, jsonify, request
 from flask_wtf import CSRFProtect
-from app.extensions import db, login_manager, migrate
-from app.models.user import User
-from app.models.camera import Camera
-from app.models.inmate import Inmate
-from app.models.alert import Alert
+from flask_socketio import SocketIO
 from flask_cors import CORS
 
-# single SocketIO instance (configured later)
-socketio = SocketIO()
+from app.extensions import db, login_manager, migrate
 
 csrf = CSRFProtect()
+socketio = SocketIO(cors_allowed_origins="*")
+
 
 def create_app():
-    app = Flask(__name__)
-    # Basic secret for dev - replace with secure secret in production
-    app.config['SECRET_KEY'] = 'your-super-secret-key'
-
-    # Load environment variables (optional .env)
     load_dotenv()
 
-    # Development config object (keeps your existing pattern)
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-super-secret-key')
+
     from .config import DevelopmentConfig
     app.config.from_object(DevelopmentConfig)
 
-    # Session cookie settings to allow cross-origin cookies in dev.
-    # NOTE: SESSION_COOKIE_SECURE should be True in production when using HTTPS.
-    app.config.setdefault("SESSION_COOKIE_SAMESITE", "None")
-    app.config.setdefault("SESSION_COOKIE_SECURE", False)
-
-    # CORS: allow your frontend origin and allow credentials (cookies)
-    # Adjust/add origins as needed (e.g. additional dev hosts).
-    FRONTEND_ORIGINS = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ]
-
+    # --- CORS: allow frontend (Vite) to call backend with cookies ---
     CORS(
         app,
-        resources={
-            r"/api/*": {"origins": FRONTEND_ORIGINS},
-            r"/admin/*": {"origins": FRONTEND_ORIGINS},
-            r"/auth/*": {"origins": FRONTEND_ORIGINS},
-            r"/": {"origins": FRONTEND_ORIGINS},
-            # Add more routes/patterns if you have other endpoints called from frontend
-        },
         supports_credentials=True,
-        origins=FRONTEND_ORIGINS,
+        resources={
+            r"/admin/api/*": {"origins": "http://localhost:5173"},
+            r"/api/*": {"origins": "http://localhost:5173"},
+        },
     )
 
-    # Initialize security + extensions
-    csrf.init_app(app)
+    # --- Initialize extensions ---
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
+    csrf.init_app(app)
+    socketio.init_app(app)
 
-    # Init SocketIO and allow the frontend origin as well (for sockets)
-    socketio.init_app(app, cors_allowed_origins=FRONTEND_ORIGINS)
+    # --- Custom unauthorized handler: HTML for pages, JSON for APIs ---
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        """
+        If user hits API endpoints without being logged in, return JSON 401.
+        For normal pages, redirect to login as usual.
+        """
+        path = request.path or ""
+        if path.startswith("/admin/api") or path.startswith("/api"):
+            return jsonify({"error": "Unauthorized"}), 401
+        return redirect(url_for("auth.login"))
 
-    # Register blueprints (keep order if some depend on others)
+    # --- Register blueprints ---
     from app.routes.auth import auth_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.inmate import inmate_bp
@@ -100,15 +89,10 @@ def create_app():
     app.register_blueprint(upload_bp)
     app.register_blueprint(admin_api_bp)
 
-    # Ensure socket events are imported so handlers are registered
-    try:
-        from app import socket_events  # noqa: F401
-    except Exception:
-        # non-fatal in case socket_events is missing during some tests
-        app.logger.warning("socket_events module missing or failed to import.")
+    from app import socket_events  # noqa: F401  (ensure Socket.IO events are registered)
 
-    @app.route('/')
+    @app.route("/")
     def index():
-        return redirect(url_for('auth.login'))
+        return redirect(url_for("auth.login"))
 
     return app

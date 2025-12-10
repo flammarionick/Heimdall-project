@@ -1,22 +1,17 @@
 // src/pages/Login.jsx
-import { useState } from 'react';
-import { Shield, Eye, EyeOff, Lock, User } from 'lucide-react';
+import { useState } from "react";
+import { Shield, Eye, EyeOff, Lock, User } from "lucide-react";
+
+const BACKEND_LOGIN_URL = "http://127.0.0.1:5000/auth/login"; // change if your Flask URL differs
 
 export default function Login() {
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Login attempt:', credentials);
-      setIsLoading(false);
-      alert('Login simulation - check console');
-    }, 1500);
+  const handleClick = () => {
+    setIsRedirecting(true);
+    // Navigate to Flask login; Flask handles real authentication + session cookie
+    window.location.href = BACKEND_LOGIN_URL;
   };
 
   return (
@@ -35,13 +30,18 @@ export default function Login() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl shadow-2xl mb-4 transform hover:scale-105 transition-transform">
             <Shield className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Heimdall</h1>
-          <p className="text-blue-200 text-sm">Secure Inmate Recognition System</p>
+          <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
+            Heimdall
+          </h1>
+          <p className="text-blue-200 text-sm">
+            Secure Inmate Recognition System
+          </p>
         </div>
 
         {/* Glass morphism card */}
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Fields are purely visual; real auth happens in Flask */}
+          <div className="space-y-6">
             {/* Username Field */}
             <div className="space-y-2">
               <label className="text-sm font-semibold text-white/90 block">
@@ -55,11 +55,6 @@ export default function Login() {
                   type="text"
                   placeholder="admin@heimdall.com"
                   className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all backdrop-blur-sm"
-                  value={credentials.username}
-                  onChange={(e) =>
-                    setCredentials({ ...credentials, username: e.target.value })
-                  }
-                  required
                 />
               </div>
             </div>
@@ -74,57 +69,60 @@ export default function Login() {
                   <Lock className="w-5 h-5 text-blue-300" />
                 </div>
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   className="w-full pl-12 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all backdrop-blur-sm"
-                  value={credentials.password}
-                  onChange={(e) =>
-                    setCredentials({ ...credentials, password: e.target.value })
-                  }
-                  required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-blue-300 hover:text-blue-200 transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
+            {/* Remember Me & Forgot Password (visual only) */}
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center text-blue-200 cursor-pointer hover:text-white transition-colors">
                 <input type="checkbox" className="mr-2 rounded" />
                 Remember me
               </label>
-              <a href="#" className="text-blue-300 hover:text-blue-200 font-medium transition-colors">
+              <button
+                type="button"
+                className="text-blue-300 hover:text-blue-200 font-medium transition-colors"
+              >
                 Forgot password?
-              </a>
+              </button>
             </div>
 
-            {/* Submit Button */}
+            {/* Sign In Button -> redirect to Flask /auth/login */}
             <button
-              type="submit"
-              disabled={isLoading}
+              type="button"
+              onClick={handleClick}
+              disabled={isRedirecting}
               className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {isLoading ? (
+              {isRedirecting ? (
                 <div className="flex items-center justify-center">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Authenticating...
+                  Redirecting to secure login...
                 </div>
               ) : (
-                'Sign In'
+                "Sign In"
               )}
             </button>
-          </form>
+          </div>
 
           {/* Additional Info */}
           <div className="mt-6 pt-6 border-t border-white/10 text-center">
             <p className="text-blue-200/70 text-sm">
-              Protected by enterprise-grade security
+              You will be redirected to the secure backend login page.
             </p>
           </div>
         </div>
