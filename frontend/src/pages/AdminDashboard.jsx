@@ -1,5 +1,6 @@
 // src/pages/AdminDashboard.jsx
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   LineChart,
   Line,
@@ -26,6 +27,7 @@ import {
   Monitor,
   Video,
   LogOut,
+  BarChart3,
 } from "lucide-react";
 
 const BACKEND_BASE_URL = "http://127.0.0.1:5000";
@@ -182,53 +184,84 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        {/* Hamburger dropdown menu */}
+        {/* Hamburger dropdown menu – all React routes */}
         {menuOpen && (
           <div className="mb-6">
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-3 sm:p-4">
               <nav className="flex flex-col sm:flex-row sm:flex-wrap gap-2 text-sm text-gray-700">
-                {/* React routes */}
-                <a
-                  href="/admin/dashboard"
+                {/* Admin dashboard (this page) */}
+                <Link
+                  to="/admin/dashboard"
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
                 >
                   <Monitor className="w-4 h-4 mr-2 text-blue-500" />
-                  Dashboard (React)
-                </a>
+                  Dashboard
+                </Link>
 
-                {/* Existing Flask pages */}
-                <a
-                  href={`${BACKEND_BASE_URL}/recognition/live`}
+                {/* Live monitoring */}
+                <Link
+                  to="/admin/live"
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
                 >
                   <Video className="w-4 h-4 mr-2 text-purple-500" />
-                  Live Recognition (Flask)
-                </a>
+                  Live Monitoring
+                </Link>
 
-                <a
-                  href={`${BACKEND_BASE_URL}/recognition/upload`}
+                {/* Upload recognition */}
+                <Link
+                  to="/admin/upload"
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
                 >
                   <Camera className="w-4 h-4 mr-2 text-indigo-500" />
-                  Upload Recognition (Flask)
-                </a>
+                  Upload Recognition
+                </Link>
 
-                <a
-                  href={`${BACKEND_BASE_URL}/inmates`}
+                {/* Inmate profiles */}
+                <Link
+                  to="/admin/inmates"
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
                 >
                   <Users className="w-4 h-4 mr-2 text-emerald-500" />
-                  Inmate Profiles (Flask)
-                </a>
+                  Inmate Profiles
+                </Link>
 
-                <a
-                  href={`${BACKEND_BASE_URL}/alerts`}
+                {/* Alerts & logs */}
+                <Link
+                  to="/admin/alerts"
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
                 >
                   <AlertTriangle className="w-4 h-4 mr-2 text-orange-500" />
-                  Alerts & Logs (Flask)
-                </a>
+                  Alerts & Logs
+                </Link>
 
+                {/* Analytics */}
+                <Link
+                  to="/admin/analytics"
+                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
+                >
+                  <BarChart3 className="w-4 h-4 mr-2 text-cyan-500" />
+                  Analytics
+                </Link>
+
+                {/* Manage cameras */}
+                <Link
+                  to="/admin/cameras"
+                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
+                >
+                  <Camera className="w-4 h-4 mr-2 text-blue-500" />
+                  Manage Cameras
+                </Link>
+
+                {/* Manage users */}
+                <Link
+                  to="/admin/users"
+                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
+                >
+                  <Shield className="w-4 h-4 mr-2 text-gray-700" />
+                  Manage Users
+                </Link>
+
+                {/* Logout still goes to backend */}
                 <a
                   href={`${BACKEND_BASE_URL}/auth/logout`}
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50 sm:ml-auto"
@@ -403,8 +436,7 @@ export default function AdminDashboard() {
                     backgroundColor: "#fff",
                     border: "1px solid #e5e7eb",
                     borderRadius: "12px",
-                    boxShadow:
-                      "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                   }}
                 />
                 <Line
