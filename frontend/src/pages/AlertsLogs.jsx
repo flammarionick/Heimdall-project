@@ -1,6 +1,6 @@
 // src/pages/AlertsLogs.jsx
 import { useState } from 'react';
-import { AlertTriangle, CheckCircle, Clock, User, Camera, Search, Download, Eye, Shield, Menu, X, Monitor, Video, Users, Bell, BarChart3, Upload, Settings, LogOut } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, User, Camera, Search, Eye, Shield, Menu, X, Monitor, Video, Users, BarChart3, Upload, LogOut } from 'lucide-react';
 
 const BACKEND_BASE_URL = "http://127.0.0.1:5000";
 
@@ -94,7 +94,7 @@ export default function AlertsLogs() {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-gray-800">Heimdall</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800">Heimdall Admin</h1>
               <p className="text-xs md:text-sm text-gray-500">Alerts & Logs</p>
             </div>
           </div>
@@ -103,7 +103,7 @@ export default function AlertsLogs() {
             <div className="hidden sm:flex items-center bg-white rounded-xl px-3 py-2 shadow">
               <Clock className="w-4 h-4 text-blue-500 mr-2" />
               <span className="text-xs md:text-sm font-medium text-gray-700">
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </span>
             </div>
             <button onClick={() => setMenuOpen((v) => !v)} className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-md border border-gray-100 hover:bg-gray-50 transition">
@@ -117,34 +117,29 @@ export default function AlertsLogs() {
           <div className="mb-6">
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-3 sm:p-4">
               <nav className="flex flex-col sm:flex-row sm:flex-wrap gap-2 text-sm text-gray-700">
-                <a href="/admin" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                <a href="/admin/dashboard" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
                   <Monitor className="w-4 h-4 mr-2 text-blue-500" />Dashboard
                 </a>
-                <a href="/monitoring" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                <a href="/admin/live" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
                   <Video className="w-4 h-4 mr-2 text-purple-500" />Live Monitoring
                 </a>
-                <a href="/inmates" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
-                  <Users className="w-4 h-4 mr-2 text-emerald-500" />Inmates
+                <a href="/admin/upload" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                  <Camera className="w-4 h-4 mr-2 text-indigo-500" />Upload Recognition
                 </a>
-                <a href="/cameras" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
-                  <Camera className="w-4 h-4 mr-2 text-indigo-500" />Cameras
+                <a href="/admin/inmates" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                  <Users className="w-4 h-4 mr-2 text-emerald-500" />Inmate Profiles
                 </a>
-                <a
-  href="/admin/alerts"
-  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50 bg-blue-50"
->
-  <Bell className="w-4 h-4 mr-2 text-orange-500" />
-  Alerts & Logs
-</a>
-
-                <a href="/analytics" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                <a href="/admin/alerts" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50 bg-blue-50">
+                  <AlertTriangle className="w-4 h-4 mr-2 text-orange-500" />Alerts & Logs
+                </a>
+                <a href="/admin/analytics" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
                   <BarChart3 className="w-4 h-4 mr-2 text-cyan-500" />Analytics
                 </a>
-                <a href="/upload" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
-                  <Upload className="w-4 h-4 mr-2 text-pink-500" />Upload
+                <a href="/admin/cameras" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                  <Camera className="w-4 h-4 mr-2 text-blue-500" />Manage Cameras
                 </a>
-                <a href="/users" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
-                  <Settings className="w-4 h-4 mr-2 text-gray-500" />Manage Users
+                <a href="/admin/users" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                  <Shield className="w-4 h-4 mr-2 text-gray-700" />Manage Users
                 </a>
                 <a href={`${BACKEND_BASE_URL}/auth/logout`} className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50 sm:ml-auto">
                   <LogOut className="w-4 h-4 mr-2 text-red-500" />Logout

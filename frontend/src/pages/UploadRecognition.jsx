@@ -1,6 +1,8 @@
 // src/pages/UploadRecognition.jsx
 import { useState } from 'react';
-import { Upload, Camera, User, MapPin, Calendar, AlertTriangle, CheckCircle2, Loader2, FileImage } from 'lucide-react';
+import { Upload, Camera, User, MapPin, Calendar, AlertTriangle, CheckCircle2, Loader2, FileImage, Shield, Menu, X, Monitor, Video, Users, BarChart3, LogOut, Clock } from 'lucide-react';
+
+const BACKEND_BASE_URL = "http://127.0.0.1:5000";
 
 export default function UploadRecognition() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -8,6 +10,7 @@ export default function UploadRecognition() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -78,10 +81,72 @@ export default function UploadRecognition() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
+        {/* Top bar with logo + hamburger */}
+        <header className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800">Heimdall Admin</h1>
+              <p className="text-xs md:text-sm text-gray-500">Face Recognition Upload</p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <div className="hidden sm:flex items-center bg-white rounded-xl px-3 py-2 shadow">
+              <Clock className="w-4 h-4 text-blue-500 mr-2" />
+              <span className="text-xs md:text-sm font-medium text-gray-700">
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </span>
+            </div>
+            <button onClick={() => setMenuOpen((v) => !v)} className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-md border border-gray-100 hover:bg-gray-50 transition">
+              {menuOpen ? <X className="w-5 h-5 text-gray-700" /> : <Menu className="w-5 h-5 text-gray-700" />}
+            </button>
+          </div>
+        </header>
+
+        {/* Hamburger dropdown menu */}
+        {menuOpen && (
+          <div className="mb-6">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-3 sm:p-4">
+              <nav className="flex flex-col sm:flex-row sm:flex-wrap gap-2 text-sm text-gray-700">
+                <a href="/admin/dashboard" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                  <Monitor className="w-4 h-4 mr-2 text-blue-500" />Dashboard
+                </a>
+                <a href="/admin/live" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                  <Video className="w-4 h-4 mr-2 text-purple-500" />Live Monitoring
+                </a>
+                <a href="/admin/upload" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50 bg-blue-50">
+                  <Camera className="w-4 h-4 mr-2 text-indigo-500" />Upload Recognition
+                </a>
+                <a href="/admin/inmates" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                  <Users className="w-4 h-4 mr-2 text-emerald-500" />Inmate Profiles
+                </a>
+                <a href="/admin/alerts" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                  <AlertTriangle className="w-4 h-4 mr-2 text-orange-500" />Alerts & Logs
+                </a>
+                <a href="/admin/analytics" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                  <BarChart3 className="w-4 h-4 mr-2 text-cyan-500" />Analytics
+                </a>
+                <a href="/admin/cameras" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                  <Camera className="w-4 h-4 mr-2 text-blue-500" />Manage Cameras
+                </a>
+                <a href="/admin/users" className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50">
+                  <Shield className="w-4 h-4 mr-2 text-gray-700" />Manage Users
+                </a>
+                <a href={`${BACKEND_BASE_URL}/auth/logout`} className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50 sm:ml-auto">
+                  <LogOut className="w-4 h-4 mr-2 text-red-500" />Logout
+                </a>
+              </nav>
+            </div>
+          </div>
+        )}
+
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Face Recognition</h1>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Face Recognition</h2>
           <p className="text-gray-600 flex items-center">
             <Camera className="w-4 h-4 mr-2" />
             Upload an image for facial recognition analysis
