@@ -808,6 +808,7 @@ export default function LiveMonitoring() {
             </div>
           </div>
         </div>
+        </div>
       </div>
     </>
   );
