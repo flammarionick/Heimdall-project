@@ -4,6 +4,8 @@
 
 # Virtual environment
 venv/
+.venv/
+backend/.venv/
 .env
 *.env
 *.pyc
@@ -62,6 +64,7 @@ settings.json
 # ================================
 # Node / React FRONTEND
 # ================================
+node_modules/
 frontend/node_modules/
 frontend/.env
 frontend/build/
