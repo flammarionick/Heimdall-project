@@ -41,11 +41,20 @@ def get_user_stats():
     # Calculate camera uptime percentage
     camera_uptime = (active_cameras / total_cameras * 100) if total_cameras > 0 else 100.0
 
-    # System status based on alerts and camera health
-    critical_alerts = Alert.query.filter_by(resolved=False, level='danger').count()
-    if critical_alerts > 0:
+    # System status based on weighted alert scoring
+    # danger = 10 points, warning = 3 points, info = 1 point
+    danger_alerts = Alert.query.filter_by(resolved=False, level='danger').count()
+    warning_alerts = Alert.query.filter_by(resolved=False, level='warning').count()
+    info_alerts = Alert.query.filter_by(resolved=False, level='info').count()
+
+    alert_score = (danger_alerts * 10) + (warning_alerts * 3) + (info_alerts * 1)
+
+    # Critical: score >= 20 (e.g., 2+ danger alerts, or 1 danger + 4 warnings)
+    # Warning: score 5-19 (e.g., 1 danger, or 2 warnings)
+    # Operational: score < 5
+    if alert_score >= 20:
         system_status = 'critical'
-    elif active_alerts > 3:
+    elif alert_score >= 5:
         system_status = 'warning'
     else:
         system_status = 'operational'
@@ -165,6 +174,19 @@ def get_system_health():
     except Exception:
         db_status = 'unhealthy'
 
+    # System status based on weighted alert scoring (same logic as /stats)
+    danger_alerts = Alert.query.filter_by(resolved=False, level='danger').count()
+    warning_alerts = Alert.query.filter_by(resolved=False, level='warning').count()
+    info_alerts = Alert.query.filter_by(resolved=False, level='info').count()
+    alert_score = (danger_alerts * 10) + (warning_alerts * 3) + (info_alerts * 1)
+
+    if alert_score >= 20:
+        system_status = 'critical'
+    elif alert_score >= 5:
+        system_status = 'warning'
+    else:
+        system_status = 'operational'
+
     return jsonify({
         'camera_uptime': round(camera_uptime, 1),
         'recognition_accuracy': round(recognition_accuracy, 1),
@@ -175,6 +197,8 @@ def get_system_health():
         'db_status': db_status,
         'active_cameras': active_cameras,
         'total_cameras': total_cameras,
+        'system_status': system_status,
+        'alert_score': alert_score,
     })
 
 

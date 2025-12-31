@@ -1,116 +1,138 @@
 // src/pages/AdminDashboard.jsx
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import {
-  Users,
-  Camera,
-  AlertTriangle,
   Shield,
-  TrendingUp,
+  ShieldCheck,
+  Users,
   Activity,
-  Clock,
-  CheckCircle,
+  AlertTriangle,
+  Camera,
+  LogOut,
   Menu,
   X,
   Monitor,
   Video,
-  LogOut,
+  Upload,
   BarChart3,
+  Clock,
+  TrendingUp,
+  CheckCircle,
 } from "lucide-react";
 
-const BACKEND_BASE_URL = "http://127.0.0.1:5000";
+// Use relative paths - Vite proxy handles routing to backend
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    total_users: 0,
-    active_users: 0,
-    suspended_users: 0,
-    total_cameras: 0,
-    total_alerts: 0,
-    total_inmates: 0,
-    matches_over_time: [],
-    inmate_status: [],
-  });
+  const navigate = useNavigate();
+  const [me, setMe] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [healthData, setHealthData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    const init = async () => {
+      try {
+        // Check authentication
+        const meRes = await fetch("/auth/api/me", {
+          credentials: "include",
+        });
 
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const res = await fetch(`${BACKEND_BASE_URL}/admin/api/stats2`, {
-        method: "GET",
-        credentials: "include", // safe even if endpoint is public
-        headers: {
-          Accept: "application/json",
-        },
-      });
-
-      const contentType = res.headers.get("content-type") || "";
-
-      if (!res.ok) {
-        if (contentType.includes("application/json")) {
-          const data = await res.json();
-          const msg =
-            data.error ||
-            data.detail ||
-            `Request failed with status ${res.status}`;
-          throw new Error(msg);
-        } else {
-          throw new Error(
-            `Request failed with status ${res.status} and non-JSON response`
-          );
+        if (meRes.status === 401) {
+          navigate("/login");
+          return;
         }
+
+        const meData = await meRes.json();
+
+        if (!meData.is_admin) {
+          navigate("/dashboard");
+          return;
+        }
+
+        setMe(meData);
+
+        // Load admin stats
+        const statsRes = await fetch("/admin/api/stats2", {
+          credentials: "include",
+        });
+
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setStats(statsData);
+        }
+
+        // Load health data for system status
+        const healthRes = await fetch("/api/user/health", {
+          credentials: "include",
+        });
+
+        if (healthRes.ok) {
+          const healthJson = await healthRes.json();
+          setHealthData(healthJson);
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Unable to load dashboard.");
+      } finally {
+        setLoading(false);
       }
+    };
 
-      if (!contentType.includes("application/json")) {
-        throw new Error(
-          "Expected JSON, got non-JSON response (possibly HTML error page)."
-        );
-      }
+    init();
+  }, [navigate]);
 
-      const data = await res.json();
-
-      setStats((prev) => ({
-        ...prev,
-        total_users: data.total_users ?? 0,
-        active_users: data.active_users ?? 0,
-        suspended_users: data.suspended_users ?? 0,
-        total_cameras: data.total_cameras ?? 0,
-        total_alerts: data.total_alerts ?? 0,
-        total_inmates: data.total_inmates ?? 0,
-        matches_over_time: Array.isArray(data.matches_over_time)
-          ? data.matches_over_time
-          : [],
-        inmate_status: Array.isArray(data.inmate_status)
-          ? data.inmate_status
-          : [],
-      }));
-    } catch (err) {
-      console.error("Could not load stats:", err);
-      setError(err.message || "Could not load analytics");
+  const handleLogout = async () => {
+    try {
+      await fetch("/auth/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (e) {
+      // ignore
     } finally {
-      setLoading(false);
+      window.location.href = "/login";
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md">
+          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 text-center">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Helper to get system status display properties
+  const getStatusDisplay = (status) => {
+    switch (status) {
+      case 'critical':
+        return { text: 'Critical', color: 'text-red-600', bgColor: 'bg-red-100', dotColor: 'bg-red-500' };
+      case 'warning':
+        return { text: 'Warning', color: 'text-orange-600', bgColor: 'bg-orange-100', dotColor: 'bg-orange-500' };
+      case 'operational':
+      default:
+        return { text: 'Operational', color: 'text-green-600', bgColor: 'bg-green-100', dotColor: 'bg-green-500' };
+    }
+  };
+
+  const statusDisplay = getStatusDisplay(healthData?.system_status);
 
   const StatCard = ({ icon: Icon, title, value, change, color, bgColor }) => (
     <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] border border-gray-100">
@@ -118,7 +140,7 @@ export default function AdminDashboard() {
         <div className={`p-3 rounded-xl ${bgColor}`}>
           <Icon className={`w-6 h-6 ${color}`} />
         </div>
-        {change !== undefined && change !== null && (
+        {change && (
           <div className="flex items-center text-sm">
             <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
             <span className="text-green-600 font-semibold">{change}%</span>
@@ -132,15 +154,10 @@ export default function AdminDashboard() {
     </div>
   );
 
-  const COLORS = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b"];
-
-  const totalMatches =
-    stats.matches_over_time?.reduce((sum, m) => sum + (m.count || 0), 0) || 0;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Top bar with logo + hamburger */}
+        {/* Header */}
         <header className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md">
@@ -151,13 +168,12 @@ export default function AdminDashboard() {
                 Heimdall Admin
               </h1>
               <p className="text-xs md:text-sm text-gray-500">
-                Real-time security monitoring and analytics
+                {me?.email || "Admin Dashboard"}
               </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-3">
-            {/* Date pill */}
             <div className="hidden sm:flex items-center bg-white rounded-xl px-3 py-2 shadow">
               <Clock className="w-4 h-4 text-blue-500 mr-2" />
               <span className="text-xs md:text-sm font-medium text-gray-700">
@@ -169,8 +185,6 @@ export default function AdminDashboard() {
                 })}
               </span>
             </div>
-
-            {/* Hamburger menu */}
             <button
               onClick={() => setMenuOpen((v) => !v)}
               className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white shadow-md border border-gray-100 hover:bg-gray-50 transition"
@@ -184,115 +198,112 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        {/* Hamburger dropdown menu – all React routes */}
+        {/* Menu */}
         {menuOpen && (
           <div className="mb-6">
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-3 sm:p-4">
               <nav className="flex flex-col sm:flex-row sm:flex-wrap gap-2 text-sm text-gray-700">
-                {/* Admin dashboard (this page) */}
-                <Link
-                  to="/admin/dashboard"
-                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
+                <a
+                  href="/admin/dashboard"
+                  className="flex items-center px-3 py-2 rounded-xl bg-blue-50"
                 >
                   <Monitor className="w-4 h-4 mr-2 text-blue-500" />
                   Dashboard
-                </Link>
-
-                {/* Live monitoring */}
-                <Link
-                  to="/admin/live"
+                </a>
+                <a
+                  href="/admin/live"
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
                 >
                   <Video className="w-4 h-4 mr-2 text-purple-500" />
                   Live Monitoring
-                </Link>
-
-                {/* Upload recognition */}
-                <Link
-                  to="/admin/upload"
+                </a>
+                <a
+                  href="/admin/upload"
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
                 >
                   <Camera className="w-4 h-4 mr-2 text-indigo-500" />
                   Upload Recognition
-                </Link>
-
-                {/* Inmate profiles */}
-                <Link
-                  to="/admin/inmates"
+                </a>
+                <a
+                  href="/admin/inmates"
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
                 >
                   <Users className="w-4 h-4 mr-2 text-emerald-500" />
                   Inmate Profiles
-                </Link>
-
-                {/* Alerts & logs */}
-                <Link
-                  to="/admin/alerts"
+                </a>
+                <a
+                  href="/admin/alerts"
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
                 >
                   <AlertTriangle className="w-4 h-4 mr-2 text-orange-500" />
                   Alerts & Logs
-                </Link>
-
-                {/* Analytics */}
-                <Link
-                  to="/admin/analytics"
+                </a>
+                <a
+                  href="/admin/analytics"
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
                 >
                   <BarChart3 className="w-4 h-4 mr-2 text-cyan-500" />
                   Analytics
-                </Link>
-
-                {/* Manage cameras */}
-                <Link
-                  to="/admin/cameras"
+                </a>
+                <a
+                  href="/admin/cameras"
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
                 >
                   <Camera className="w-4 h-4 mr-2 text-blue-500" />
                   Manage Cameras
-                </Link>
-
-                {/* Manage users */}
-                <Link
-                  to="/admin/users"
+                </a>
+                <a
+                  href="/admin/users"
                   className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
                 >
                   <Shield className="w-4 h-4 mr-2 text-gray-700" />
                   Manage Users
-                </Link>
-
-                {/* Logout still goes to backend */}
-                <a
-                  href={`${BACKEND_BASE_URL}/auth/logout`}
-                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50 sm:ml-auto"
+                </a>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50 sm:ml-auto text-left"
                 >
                   <LogOut className="w-4 h-4 mr-2 text-red-500" />
                   Logout
-                </a>
+                </button>
               </nav>
             </div>
           </div>
         )}
 
-        {/* Error banner */}
-        {error && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <strong className="font-semibold">Could not load analytics: </strong>
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Main content */}
+        {/* Main Dashboard */}
         <div className="mb-6">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            Admin Dashboard
+            Dashboard Overview
           </h2>
           <p className="text-gray-600 flex items-center">
             <Activity className="w-4 h-4 mr-2 text-blue-500" />
-            {loading
-              ? "Loading analytics…"
-              : "Real-time security monitoring and analytics"}
+            Real-time security monitoring and analytics
           </p>
+        </div>
+
+        {/* System Status Banner */}
+        <div className={`rounded-2xl p-4 mb-6 shadow-lg border ${statusDisplay.bgColor} border-gray-100`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-xl bg-white/50`}>
+                <ShieldCheck className={`w-6 h-6 ${statusDisplay.color}`} />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 font-medium">System Status</p>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${statusDisplay.dotColor} animate-pulse`}></span>
+                  <span className={`text-lg font-bold ${statusDisplay.color}`}>{statusDisplay.text}</span>
+                </div>
+              </div>
+            </div>
+            {healthData && (
+              <div className="text-right text-sm text-gray-600">
+                <p>Alert Score: <span className="font-semibold">{healthData.alert_score || 0}</span></p>
+                <p>Unresolved: {healthData.alerts_24h || 0} in 24h</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -300,7 +311,7 @@ export default function AdminDashboard() {
           <StatCard
             icon={Users}
             title="Total Users"
-            value={stats.total_users}
+            value={stats?.total_users || 0}
             change={12}
             color="text-blue-600"
             bgColor="bg-blue-100"
@@ -308,7 +319,7 @@ export default function AdminDashboard() {
           <StatCard
             icon={CheckCircle}
             title="Active Users"
-            value={stats.active_users}
+            value={stats?.active_users || 0}
             change={8}
             color="text-green-600"
             bgColor="bg-green-100"
@@ -316,7 +327,7 @@ export default function AdminDashboard() {
           <StatCard
             icon={Camera}
             title="Active Cameras"
-            value={stats.total_cameras}
+            value={stats?.total_cameras || 0}
             change={5}
             color="text-purple-600"
             bgColor="bg-purple-100"
@@ -324,177 +335,132 @@ export default function AdminDashboard() {
           <StatCard
             icon={AlertTriangle}
             title="Total Alerts"
-            value={stats.total_alerts}
+            value={stats?.total_alerts || 0}
             color="text-orange-600"
             bgColor="bg-orange-100"
           />
         </div>
 
-        {/* Additional Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold text-gray-800">
-                System Status
-              </h3>
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                <span className="text-sm text-green-600 font-medium">
-                  {loading ? "Loading…" : "Operational"}
-                </span>
-              </div>
+        {/* System Health */}
+        {healthData && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">System Health</h3>
+              <span className={`text-xs px-2 py-1 rounded-full ${healthData.db_status === 'healthy' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                DB: {healthData.db_status}
+              </span>
             </div>
-            <div className="space-y-4 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Camera Uptime */}
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Detection Accuracy</span>
-                  <span className="font-semibold text-gray-800">94.2%</span>
+                  <span className="text-gray-600">Camera Uptime</span>
+                  <span className="font-semibold text-gray-800">{healthData.camera_uptime || 0}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
-                    style={{ width: "94.2%" }}
-                  ></div>
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all" style={{ width: `${healthData.camera_uptime || 0}%` }}></div>
                 </div>
               </div>
+              {/* Recognition Accuracy */}
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">System Uptime</span>
-                  <span className="font-semibold text-gray-800">99.8%</span>
+                  <span className="text-gray-600">Recognition Accuracy</span>
+                  <span className="font-semibold text-gray-800">{healthData.recognition_accuracy || 0}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full"
-                    style={{ width: "99.8%" }}
-                  ></div>
+                  <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full transition-all" style={{ width: `${healthData.recognition_accuracy || 0}%` }}></div>
                 </div>
               </div>
+              {/* Response Time */}
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-600">Response Time</span>
-                  <span className="font-semibold text-gray-800">0.3s</span>
+                  <span className="font-semibold text-gray-800">{healthData.avg_response_time || 0}s</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
-                    style={{ width: "85%" }}
-                  ></div>
+                  <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style={{ width: `${Math.max(0, 100 - (healthData.avg_response_time || 0) * 20)}%` }}></div>
+                </div>
+              </div>
+              {/* Resolution Rate */}
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-600">Resolution Rate</span>
+                  <span className="font-semibold text-gray-800">{healthData.resolution_rate || 0}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-gradient-to-r from-indigo-500 to-violet-500 h-2 rounded-full transition-all" style={{ width: `${healthData.resolution_rate || 0}%` }}></div>
                 </div>
               </div>
             </div>
           </div>
+        )}
 
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Quick Stats
-            </h3>
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              <div className="text-center p-4 bg-blue-50 rounded-xl">
-                <Shield className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-gray-800">
-                  {stats.total_inmates}
-                </p>
-                <p className="text-sm text-gray-600">Total Inmates</p>
+        {/* Quick Links */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <a
+              href="/admin/users"
+              className="flex items-center p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-all border border-blue-100"
+            >
+              <Users className="w-8 h-8 text-blue-600 mr-3" />
+              <div>
+                <p className="font-semibold text-gray-800">Manage Users</p>
+                <p className="text-xs text-gray-600">Add, edit, or remove users</p>
               </div>
-              <div className="text-center p-4 bg-red-50 rounded-xl">
-                <AlertTriangle className="w-8 h-8 text-red-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-gray-800">
-                  {stats.suspended_users}
-                </p>
-                <p className="text-sm text-gray-600">Suspended Users</p>
+            </a>
+            <a
+              href="/admin/live"
+              className="flex items-center p-4 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-all border border-purple-100"
+            >
+              <Video className="w-8 h-8 text-purple-600 mr-3" />
+              <div>
+                <p className="font-semibold text-gray-800">Live Monitoring</p>
+                <p className="text-xs text-gray-600">View camera feeds</p>
               </div>
-              <div className="text-center p-4 bg-green-50 rounded-xl col-span-2">
-                <Activity className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-gray-800">
-                  {totalMatches.toLocaleString()}
-                </p>
-                <p className="text-sm text-gray-600">Matches (shown period)</p>
+            </a>
+            <a
+              href="/admin/upload"
+              className="flex items-center p-4 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-all border border-green-100"
+            >
+              <Upload className="w-8 h-8 text-green-600 mr-3" />
+              <div>
+                <p className="font-semibold text-gray-800">Upload Recognition</p>
+                <p className="text-xs text-gray-600">Analyze face images</p>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Line Chart */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-800">
-                Recognition Trends
-              </h2>
-              <select className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm font-medium text-gray-700 border-none focus:outline-none focus:ring-2 focus:ring-blue-400">
-                <option>Last Period</option>
-              </select>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={stats.matches_over_time}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="date" stroke="#9ca3af" />
-                <YAxis stroke="#9ca3af" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "12px",
-                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  stroke="#3b82f6"
-                  strokeWidth={3}
-                  dot={{ fill: "#3b82f6", r: 5 }}
-                  activeDot={{ r: 7 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Pie Chart */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-800">
-                Inmate Status Distribution
-              </h2>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={stats.inmate_status}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent * 100).toFixed(0)}%`
-                  }
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {stats.inmate_status.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex justify-center gap-6 mt-4">
-              {stats.inmate_status.map((item, index) => (
-                <div key={index} className="flex items-center">
-                  <div
-                    className="w-4 h-4 rounded-full mr-2"
-                    style={{ backgroundColor: COLORS[index] }}
-                  ></div>
-                  <span className="text-sm text-gray-600">
-                    {item.name}: {item.value}
-                  </span>
-                </div>
-              ))}
-            </div>
+            </a>
+            <a
+              href="/admin/inmates"
+              className="flex items-center p-4 rounded-xl bg-gradient-to-br from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 transition-all border border-yellow-100"
+            >
+              <Users className="w-8 h-8 text-orange-600 mr-3" />
+              <div>
+                <p className="font-semibold text-gray-800">Inmate Profiles</p>
+                <p className="text-xs text-gray-600">View and manage profiles</p>
+              </div>
+            </a>
+            <a
+              href="/admin/alerts"
+              className="flex items-center p-4 rounded-xl bg-gradient-to-br from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 transition-all border border-red-100"
+            >
+              <AlertTriangle className="w-8 h-8 text-red-600 mr-3" />
+              <div>
+                <p className="font-semibold text-gray-800">Alerts & Logs</p>
+                <p className="text-xs text-gray-600">Review system alerts</p>
+              </div>
+            </a>
+            <a
+              href="/admin/analytics"
+              className="flex items-center p-4 rounded-xl bg-gradient-to-br from-cyan-50 to-blue-50 hover:from-cyan-100 hover:to-blue-100 transition-all border border-cyan-100"
+            >
+              <BarChart3 className="w-8 h-8 text-cyan-600 mr-3" />
+              <div>
+                <p className="font-semibold text-gray-800">Analytics</p>
+                <p className="text-xs text-gray-600">View reports and trends</p>
+              </div>
+            </a>
           </div>
         </div>
       </div>
