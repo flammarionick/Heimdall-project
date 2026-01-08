@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, flash, url_for, request
-from flask_login import login_required
+from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.forms import InmateForm
 from app.models.inmate import Inmate
@@ -91,6 +91,10 @@ def register():
             # Optional: if your Inmate model has a JSON/ARRAY field for the embedding
             if hasattr(inmate, 'face_encoding'):
                 inmate.face_encoding = embedding  # JSON-serializable list of floats
+
+            # Set who registered this inmate
+            if hasattr(inmate, 'registered_by') and current_user.is_authenticated:
+                inmate.registered_by = current_user.id
 
             db.session.add(inmate)
             db.session.commit()

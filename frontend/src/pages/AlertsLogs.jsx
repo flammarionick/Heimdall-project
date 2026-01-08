@@ -16,13 +16,17 @@ import {
   Filter,
   Activity,
   CheckCircle,
-  XCircle
+  XCircle,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
+import { useAlarm } from '../contexts/AlarmContext';
 
 const BACKEND_BASE_URL = "";
 
 export default function AlertsLogs() {
   const navigate = useNavigate();
+  const { resolveAlarm, hasActiveAlarms, isAudioPlaying, stopAllAlarms } = useAlarm();
   const [me, setMe] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const [filteredAlerts, setFilteredAlerts] = useState([]);
@@ -69,6 +73,8 @@ export default function AlertsLogs() {
         credentials: 'include',
       });
       if (res.ok) {
+        // Immediately stop alarm for this alert via AlarmContext
+        resolveAlarm(alertId);
         // Refresh alerts list
         fetchAlerts();
       } else {
@@ -133,7 +139,11 @@ export default function AlertsLogs() {
     }
 
     if (statusFilter !== 'all') {
-      filtered = filtered.filter((a) => (a.status || 'open') === statusFilter);
+      // Backend returns 'resolved' as boolean, convert to status string for filtering
+      filtered = filtered.filter((a) => {
+        const status = a.resolved ? 'resolved' : 'open';
+        return status === statusFilter;
+      });
     }
 
     setFilteredAlerts(filtered);
@@ -148,9 +158,9 @@ export default function AlertsLogs() {
 
   const stats = {
     total: alerts.length,
-    open: alerts.filter((a) => (a.status || 'open') === 'open').length,
-    resolved: alerts.filter((a) => a.status === 'resolved').length,
-    critical: alerts.filter((a) => (a.severity || '').toLowerCase() === 'critical').length,
+    open: alerts.filter((a) => !a.resolved).length,
+    resolved: alerts.filter((a) => a.resolved === true).length,
+    critical: alerts.filter((a) => (a.level || '').toLowerCase() === 'danger').length,
   };
 
   if (loading) {
@@ -276,6 +286,34 @@ export default function AlertsLogs() {
           </div>
         )}
 
+        {/* Active Alarm Banner */}
+        {hasActiveAlarms && (
+          <div className="mb-6 bg-red-600 rounded-2xl p-4 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 text-white">
+                {isAudioPlaying ? (
+                  <Volume2 className="w-6 h-6 animate-pulse" />
+                ) : (
+                  <VolumeX className="w-6 h-6" />
+                )}
+                <div>
+                  <h3 className="font-bold text-lg">Active Alarm</h3>
+                  <p className="text-red-100 text-sm">
+                    {isAudioPlaying ? 'Alarm sounding - resolve alerts below to stop' : 'Silent period - alarm will resume shortly'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={stopAllAlarms}
+                className="bg-white text-red-600 px-4 py-2 rounded-xl font-semibold hover:bg-red-50 transition-colors flex items-center gap-2"
+              >
+                <VolumeX className="w-4 h-4" />
+                Emergency Stop
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Title */}
         <div className="mb-6">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Alerts & Logs</h2>
@@ -356,7 +394,7 @@ export default function AlertsLogs() {
                       <span className="text-sm text-gray-600">{a.camera_name || a.camera || '—'}</span>
                     </td>
                     <td className="px-6 py-4">
-                      {(a.status || 'open') === 'resolved' ? (
+                      {a.resolved ? (
                         <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
                           Resolved
                         </span>
@@ -373,7 +411,7 @@ export default function AlertsLogs() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {(a.status || 'open') !== 'resolved' && (
+                      {!a.resolved && (
                         <button
                           onClick={() => handleResolveAlert(a.id)}
                           className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center"

@@ -1,7 +1,7 @@
 # app/routes/alerts.py
 from flask import Blueprint, jsonify, render_template, request
 from flask_login import login_required
-from app import db
+from app.extensions import db
 from app.models.alert import Alert
 from app.utils.auth_helpers import login_or_jwt_required
 
@@ -45,7 +45,7 @@ def create_alert():
     db.session.commit()
 
     # Emit real-time alert via Socket.IO
-    from run import socketio
+    from app import socketio
     socketio.emit('new_alert', {
         'id': alert.id,
         'message': alert.message,

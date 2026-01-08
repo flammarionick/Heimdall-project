@@ -1,4 +1,4 @@
-// src/pages/LiveMonitoring.jsx
+// src/pages/LiveMonitoring.jsx - Recording + Recognition
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -24,15 +24,20 @@ import {
   Square,
   Scan,
   User,
+  Circle,
+  StopCircle,
+  Film,
 } from "lucide-react";
 import { io } from "socket.io-client";
 import EscapedInmateAlarm from "../components/EscapedInmateAlarm";
+import { useAlarm } from "../contexts/AlarmContext";
 
 // IMPORTANT: use relative routes (Vite proxy should forward to Flask)
 const API_BASE = "";
 
 export default function LiveMonitoring() {
   const navigate = useNavigate();
+  const { triggerAlarm, visibleAlarm, dismissVisual } = useAlarm();
 
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,8 +61,19 @@ export default function LiveMonitoring() {
   const recognitionIntervalRef = useRef(null);
   const [videoReady, setVideoReady] = useState(false);  // Track when video metadata is loaded
 
-  // Escaped inmate alarm state
-  const [escapedAlarm, setEscapedAlarm] = useState(null);
+  // Recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingId, setRecordingId] = useState(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [recordingStatus, setRecordingStatus] = useState("");
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+  const recordingStartRef = useRef(null);
+  const recordingTimerRef = useRef(null);
+  const autoSegmentTimeoutRef = useRef(null);
+  const pendingRecordingIdRef = useRef(null);  // Captures recordingId for async onstop handler
+
+  // Socket reference
   const socketRef = useRef(null);
 
   // Basic UI-only feeds (safe fallback if API for cameras isn't ready)
@@ -97,7 +113,9 @@ export default function LiveMonitoring() {
                   online: Boolean(c.is_active ?? c.status ?? true),
                   camera_type: c.camera_type || "webcam",
                   stream_url: c.stream_url || "",
-                  device_id: c.device_id || ""
+                  device_id: c.device_id || "",
+                  latitude: c.latitude || null,
+                  longitude: c.longitude || null
                 }))
               );
             }
@@ -127,7 +145,8 @@ export default function LiveMonitoring() {
     // Listen for escaped inmate alarms from backend
     socketRef.current.on('escaped_inmate_alarm', (data) => {
       console.log('[LiveMonitoring] Escaped inmate alarm received:', data);
-      setEscapedAlarm(data);
+      // Use AlarmContext to trigger alarm - audio persists across pages
+      triggerAlarm(data);
     });
 
     // Cleanup on unmount
@@ -136,7 +155,7 @@ export default function LiveMonitoring() {
         socketRef.current.disconnect();
       }
     };
-  }, []);
+  }, [triggerAlarm]);
 
   const handleLogout = async () => {
     try {
@@ -151,8 +170,40 @@ export default function LiveMonitoring() {
     }
   };
 
+  // Computed values - must be defined before callbacks that use them
+  const filteredFeeds = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return feeds;
+    return feeds.filter(
+      (f) =>
+        (f.name || "").toLowerCase().includes(q) ||
+        (f.location || "").toLowerCase().includes(q)
+    );
+  }, [feeds, query]);
+
+  const selectedFeed =
+    filteredFeeds.find((f) => f.id === selectedId) || filteredFeeds[0] || null;
+
   // Stop any existing stream
   const stopStream = useCallback(() => {
+    // Stop recording if active
+    if (isRecording) {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      if (autoSegmentTimeoutRef.current) {
+        clearTimeout(autoSegmentTimeoutRef.current);
+        autoSegmentTimeoutRef.current = null;
+      }
+      setIsRecording(false);
+      setRecordingId(null);
+      setRecordingDuration(0);
+    }
+
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
@@ -163,7 +214,7 @@ export default function LiveMonitoring() {
     setIsStreaming(false);
     setStreamError("");
     setVideoReady(false);  // Reset video ready state
-  }, [stream]);
+  }, [stream, isRecording]);
 
   // Start webcam or USB camera stream
   const startStream = useCallback(async (feed) => {
@@ -251,11 +302,12 @@ export default function LiveMonitoring() {
 
         if (res.ok) {
           if (data.status === 'escaped_inmate_detected') {
-            // CRITICAL: Escaped inmate detected - trigger alarm!
+            // CRITICAL: Escaped inmate detected - trigger alarm via AlarmContext!
             setRecognitionResult(data.inmate);
             setRecognitionStatus("ESCAPED INMATE DETECTED!");
-            setEscapedAlarm({
+            triggerAlarm({
               inmate: data.inmate,
+              alert_id: data.alert_id,
               timestamp: new Date().toISOString(),
               requires_acknowledgment: true
             });
@@ -284,7 +336,7 @@ export default function LiveMonitoring() {
         setRecognitionStatus(`Network error: ${err.message}`);
       }
     }, 'image/jpeg', 0.85);
-  }, [isStreaming, videoReady]);
+  }, [isStreaming, videoReady, triggerAlarm]);
 
   // Start facial recognition
   const startRecognition = useCallback(() => {
@@ -320,6 +372,228 @@ export default function LiveMonitoring() {
     setRecognitionStatus("");
   }, []);
 
+  // Upload recording to server
+  const uploadRecording = useCallback(async (recordId, chunks, duration) => {
+    if (!chunks.length) {
+      setRecordingStatus("No recording data to upload");
+      return;
+    }
+
+    setRecordingStatus("Uploading recording...");
+
+    try {
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const formData = new FormData();
+      formData.append('video', blob, `recording_${recordId}.webm`);
+      formData.append('duration', Math.round(duration));
+
+      const res = await fetch(`/api/recordings/${recordId}/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+
+      if (res.ok) {
+        setRecordingStatus("Recording saved successfully!");
+        setTimeout(() => setRecordingStatus(""), 3000);
+      } else {
+        const data = await res.json();
+        setRecordingStatus(`Upload failed: ${data.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      setRecordingStatus(`Upload failed: ${err.message}`);
+    }
+  }, []);
+
+  // Start recording
+  const startRecording = useCallback(async () => {
+    if (!stream || !selectedFeed) {
+      setRecordingStatus("No active stream to record");
+      return;
+    }
+
+    // Check MediaRecorder support
+    if (!window.MediaRecorder) {
+      setRecordingStatus("Recording not supported in this browser");
+      return;
+    }
+
+    setRecordingStatus("Detecting location...");
+
+    // Get GPS coordinates - always try for webcams
+    let latitude = selectedFeed.latitude;
+    let longitude = selectedFeed.longitude;
+    let locationName = null;
+
+    // For webcams, always try to get current GPS location
+    const isWebcam = selectedFeed.camera_type === 'webcam' || !selectedFeed.stream_url;
+
+    if (isWebcam || !latitude || !longitude) {
+      // Try GPS first for precise coordinates
+      try {
+        console.log("Requesting GPS location...");
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: false,
+            timeout: 5000,
+            maximumAge: 300000
+          });
+        });
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+        console.log("GPS location obtained:", latitude, longitude);
+      } catch (err) {
+        console.log("GPS location failed:", err.message);
+      }
+
+      // Use IP geolocation for city name (ipapi.co supports HTTPS)
+      try {
+        console.log("Getting city from IP geolocation...");
+        const ipRes = await fetch('https://ipapi.co/json/');
+        if (ipRes.ok) {
+          const ipData = await ipRes.json();
+          if (!ipData.error) {
+            locationName = ipData.city || ipData.region || ipData.country_name;
+            // Use IP coordinates as fallback if GPS failed
+            if (!latitude || !longitude) {
+              latitude = ipData.latitude;
+              longitude = ipData.longitude;
+            }
+            console.log("Location detected:", locationName);
+          }
+        }
+      } catch (ipErr) {
+        console.log("IP geolocation failed:", ipErr.message);
+      }
+    }
+
+    // Fallback to feed location or default
+    if (!locationName) {
+      locationName = selectedFeed.location || 'Unknown Location';
+    }
+
+    setRecordingStatus("Starting recording...");
+
+    // Create recording in backend
+    try {
+      const res = await fetch('/api/recordings/start', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          camera_id: selectedFeed.id,
+          camera_name: selectedFeed.name || selectedFeed.label,
+          latitude,
+          longitude,
+          location_name: locationName || 'Unknown Location'
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setRecordingStatus(`Failed to start: ${data.error}`);
+        return;
+      }
+
+      const data = await res.json();
+      setRecordingId(data.id);
+      pendingRecordingIdRef.current = data.id;  // Store for async onstop handler
+
+      // Reset chunks
+      recordedChunksRef.current = [];
+      recordingStartRef.current = Date.now();
+
+      // Check for supported MIME type
+      let mimeType = 'video/webm;codecs=vp9';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'video/webm;codecs=vp8';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'video/webm';
+        }
+      }
+
+      // Create MediaRecorder
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const duration = (Date.now() - recordingStartRef.current) / 1000;
+        const recId = pendingRecordingIdRef.current;  // Use ref, not state (avoids race condition)
+        if (recId && recordedChunksRef.current.length > 0) {
+          uploadRecording(recId, recordedChunksRef.current, duration);
+        }
+        pendingRecordingIdRef.current = null;  // Clear ref after upload triggered
+        recordedChunksRef.current = [];  // Clear chunks
+      };
+
+      mediaRecorder.onerror = (event) => {
+        console.error("MediaRecorder error:", event);
+        setRecordingStatus(`Recording error: ${event.error?.message || 'Unknown'}`);
+        setIsRecording(false);
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start(1000); // Collect data every second
+      setIsRecording(true);
+      setRecordingDuration(0);
+      setRecordingStatus("Recording...");
+
+      // Start duration timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+
+      // Auto-segment after 1 hour
+      autoSegmentTimeoutRef.current = setTimeout(() => {
+        if (isRecording) {
+          stopRecordingInternal();
+          // Start new segment
+          startRecording();
+        }
+      }, 60 * 60 * 1000);
+
+    } catch (err) {
+      console.error("Start recording error:", err);
+      setRecordingStatus(`Error: ${err.message}`);
+    }
+  }, [stream, selectedFeed, uploadRecording]);
+
+  // Internal stop recording (for auto-segment)
+  const stopRecordingInternal = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    if (autoSegmentTimeoutRef.current) {
+      clearTimeout(autoSegmentTimeoutRef.current);
+      autoSegmentTimeoutRef.current = null;
+    }
+    setIsRecording(false);
+  }, []);
+
+  // Stop recording (user-triggered)
+  const stopRecording = useCallback(() => {
+    stopRecordingInternal();
+    setRecordingId(null);
+    setRecordingDuration(0);
+  }, [stopRecordingInternal]);
+
+  // Format duration as MM:SS
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   // Sync stream to video element when stream or isStreaming changes
   // This fixes the race condition where state updates before srcObject is set
   useEffect(() => {
@@ -328,7 +602,7 @@ export default function LiveMonitoring() {
     }
   }, [stream, isStreaming]);
 
-  // Clean up stream and recognition on unmount
+  // Clean up stream, recognition, and recording on unmount
   useEffect(() => {
     return () => {
       if (stream) {
@@ -337,26 +611,29 @@ export default function LiveMonitoring() {
       if (recognitionIntervalRef.current) {
         clearInterval(recognitionIntervalRef.current);
       }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+      if (autoSegmentTimeoutRef.current) {
+        clearTimeout(autoSegmentTimeoutRef.current);
+      }
     };
   }, [stream]);
-
-  const filteredFeeds = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return feeds;
-    return feeds.filter(
-      (f) =>
-        (f.name || "").toLowerCase().includes(q) ||
-        (f.location || "").toLowerCase().includes(q)
-    );
-  }, [feeds, query]);
-
-  const selectedFeed =
-    filteredFeeds.find((f) => f.id === selectedId) || filteredFeeds[0] || null;
 
   useEffect(() => {
     if (!selectedId && filteredFeeds.length) setSelectedId(filteredFeeds[0].id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredFeeds.length]);
+
+  // Handler for dismissing the escaped inmate alarm visual (audio continues)
+  const handleDismissAlarm = useCallback(() => {
+    dismissVisual();
+    setRecognitionResult(null);
+    setRecognitionStatus("Visual dismissed - alarm continues until resolved...");
+  }, [dismissVisual]);
 
   if (loading) {
     return (
@@ -380,25 +657,20 @@ export default function LiveMonitoring() {
     );
   }
 
-  // Handler for dismissing the escaped inmate alarm
-  const handleDismissAlarm = useCallback(() => {
-    setEscapedAlarm(null);
-    setRecognitionResult(null);
-    setRecognitionStatus("Alarm acknowledged - continuing scan...");
-  }, []);
-
   return (
     <>
-      {/* Escaped Inmate Alarm Modal */}
-      {escapedAlarm && (
+      {/* Escaped Inmate Alarm Modal - controlled by AlarmContext */}
+      {visibleAlarm && (
         <EscapedInmateAlarm
-          inmate={escapedAlarm.inmate}
-          alertId={escapedAlarm.alert_id}
-          detectionLocation={escapedAlarm.detection_location}
-          timestamp={escapedAlarm.timestamp}
+          inmate={visibleAlarm.inmate}
+          alertId={visibleAlarm.alertId}
+          detectionLocation={visibleAlarm.detection_location}
+          timestamp={visibleAlarm.timestamp}
           onDismiss={handleDismissAlarm}
         />
       )}
+
+      {/* Note: Global AlarmIndicator component in App.jsx handles persistent alarm display */}
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
@@ -496,6 +768,13 @@ export default function LiveMonitoring() {
                 >
                   <Camera className="w-4 h-4 mr-2 text-blue-500" />
                   Manage Cameras
+                </a>
+                <a
+                  href="/admin/surveillance"
+                  className="flex items-center px-3 py-2 rounded-xl hover:bg-gray-50"
+                >
+                  <Film className="w-4 h-4 mr-2 text-rose-500" />
+                  Surveillance
                 </a>
                 {me?.is_admin && (
                   <a
@@ -698,6 +977,26 @@ export default function LiveMonitoring() {
                 </div>
               )}
 
+              {/* Recording indicator */}
+              {isRecording && (
+                <div className="absolute top-4 left-4 bg-red-600/90 text-white px-4 py-2 rounded-xl shadow-lg z-10">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+                    <span className="text-sm font-semibold">REC {formatDuration(recordingDuration)}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Recording status message */}
+              {recordingStatus && !isRecording && (
+                <div className="absolute bottom-4 left-4 bg-gray-800/90 text-white px-4 py-2 rounded-xl shadow-lg z-10">
+                  <div className="flex items-center gap-2">
+                    <Film className="w-4 h-4" />
+                    <span className="text-sm">{recordingStatus}</span>
+                  </div>
+                </div>
+              )}
+
               {isStreaming ? (
                 <video
                   ref={videoRef}
@@ -707,6 +1006,8 @@ export default function LiveMonitoring() {
                   onLoadedMetadata={(e) => {
                     e.target.play();
                     setVideoReady(true);  // Signal that video dimensions are available
+                    // Auto-start recording when stream is ready
+                    startRecording();
                   }}
                   className="w-full h-full object-cover"
                 />
@@ -784,6 +1085,8 @@ export default function LiveMonitoring() {
                       Stop Recognition
                     </button>
                   )}
+
+                  {/* Recording is now automatic - starts when stream starts */}
                 </>
               )}
             </div>

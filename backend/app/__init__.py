@@ -1,14 +1,16 @@
 # app/__init__.py
-
 import os
+from datetime import timedelta
+
 from dotenv import load_dotenv
-from flask import Flask, redirect, url_for, jsonify, request
-from flask_wtf import CSRFProtect
-from flask_socketio import SocketIO
+from flask import Flask, jsonify, redirect, request, url_for
 from flask_cors import CORS
+from flask_socketio import SocketIO
+from flask_wtf import CSRFProtect
 
 from app.extensions import db, login_manager, migrate
 
+# Make these importable as: `from app import csrf, socketio`
 csrf = CSRFProtect()
 socketio = SocketIO(cors_allowed_origins="*")
 
@@ -17,41 +19,47 @@ def create_app():
     load_dotenv()
 
     app = Flask(__name__)
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "your-super-secret-key")
 
-    # Config object
-    from .config import DevelopmentConfig
+    # Disable strict slashes globally to prevent redirect issues with CORS
+    app.url_map.strict_slashes = False
 
-    app.config.from_object(DevelopmentConfig)
+    # ─────────────────────────────────────────────
+    # Core config
+    # ─────────────────────────────────────────────
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "super-secret")
 
-    # For local dev, make cookies usable from the React app
-    # (adjust these for production / HTTPS)
-    app.config.setdefault("SESSION_COOKIE_SAMESITE", "Lax")
-    # If you later decide to do true cross-site cookies, you can move to:
-    #   SESSION_COOKIE_SAMESITE = "None"
-    #   SESSION_COOKIE_SECURE = True   (with HTTPS)
+    # Session cookies for local dev (React on 5173, Flask on 5000)
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = False
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
+    app.config["REMEMBER_COOKIE_SECURE"] = False
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
 
-    # Allow React frontend to call Flask API with cookies
+    # Load config from config.py
+    try:
+        from app.config import DevelopmentConfig
+        app.config.from_object(DevelopmentConfig)
+    except Exception:
+        pass
+
+    # ─────────────────────────────────────────────
+    # CORS (for API endpoints called by React)
+    # ─────────────────────────────────────────────
     CORS(
         app,
         supports_credentials=True,
         resources={
-            # API auth endpoints used by React: /auth/api/login, /auth/api/me, /auth/api/logout
-            r"/auth/api/*": {
-                "origins": ["http://localhost:5173", "http://127.0.0.1:5173"]
-            },
-            # Admin JSON API for dashboard + user management
-            r"/admin/api/*": {
-                "origins": ["http://localhost:5173", "http://127.0.0.1:5173"]
-            },
-            # Any other JSON APIs you expose under /api/...
-            r"/api/*": {
-                "origins": ["http://localhost:5173", "http://127.0.0.1:5173"]
-            },
+            r"/auth/api/*": {"origins": ["http://localhost:5173"]},
+            r"/admin/api/*": {"origins": ["http://localhost:5173"]},
+            r"/api/*": {"origins": ["http://localhost:5173"]},
+            r"/socket.io/*": {"origins": ["http://localhost:5173"]},
         },
     )
 
-    # Initialize extensions
+    # ─────────────────────────────────────────────
+    # Extensions
+    # ─────────────────────────────────────────────
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
@@ -59,61 +67,90 @@ def create_app():
     csrf.init_app(app)
     socketio.init_app(app)
 
-    # Return JSON 401 for API calls instead of redirecting the frontend
+    # ─────────────────────────────────────────────
+    # Flask-Login: API routes return JSON, not redirect
+    # ─────────────────────────────────────────────
     @login_manager.unauthorized_handler
     def unauthorized():
         path = request.path or ""
-
-        # For XHR / fetch calls, return JSON
-        if path.startswith("/auth/api") or path.startswith("/admin/api") or path.startswith(
-            "/api"
-        ):
-            return jsonify({"error": "Unauthorized"}), 401
-
-        # For normal page views, keep redirect behaviour
+        if path.startswith(("/auth/api", "/admin/api", "/api")):
+            return jsonify({"error": "unauthorized"}), 401
         return redirect(url_for("auth.login"))
 
-    # ---- Register Blueprints ----
-    from app.routes.auth import auth_bp
-    from app.routes.api_auth import api_auth_bp
-    from app.routes.admin_api import admin_api_bp
-    from app.routes.dashboard import dashboard_bp
-    from app.routes.inmate import inmate_bp
-    from app.routes.camera import camera_bp
-    from app.routes.settings import settings_bp
-    from app.routes.api import api_bp
-    from app.routes.api.camera_routes import api_camera
-    from app.routes.admin_users import admin_users_bp
-    from app.routes.admin.user_admin import admin_user_bp
-    from app.routes.recognition import recognition_bp
-    from app.routes.recognition_api import recognition_api_bp
-    from app.routes.alerts import alerts_api_bp, alerts_page_bp
-    from app.routes.admin_dashboard import admin_dashboard_bp
-    from app.routes.api.user_routes import user_api_bp
-    from app.routes.upload_recognition import upload_bp
+    # ─────────────────────────────────────────────
+    # Register blueprints
+    # ─────────────────────────────────────────────
 
+    # Auth API (JSON endpoints for React) - CSRF exempt
+    from app.routes.auth_api import auth_api_bp
+    csrf.exempt(auth_api_bp)
+    app.register_blueprint(auth_api_bp)
+
+    # Auth pages (server-rendered, CSRF protected)
+    from app.routes.auth import auth_bp
     app.register_blueprint(auth_bp)
-    app.register_blueprint(api_auth_bp)
-    app.register_blueprint(admin_users_bp)
-    app.register_blueprint(admin_user_bp)
-    app.register_blueprint(dashboard_bp)
-    app.register_blueprint(inmate_bp)
-    app.register_blueprint(camera_bp)
-    app.register_blueprint(settings_bp)
-    app.register_blueprint(api_bp)
-    app.register_blueprint(api_camera)
-    app.register_blueprint(recognition_bp)
-    app.register_blueprint(recognition_api_bp)
-    app.register_blueprint(alerts_api_bp)
-    app.register_blueprint(alerts_page_bp)
-    app.register_blueprint(admin_dashboard_bp)
-    app.register_blueprint(user_api_bp)
-    app.register_blueprint(upload_bp)
+
+    # Admin API (JSON endpoints) - CSRF exempt
+    from app.routes.admin_api import admin_api_bp
+    csrf.exempt(admin_api_bp)
     app.register_blueprint(admin_api_bp)
 
-    # Load Socket.IO handlers
-    from app import socket_events  # noqa
+    # Register remaining blueprints with error handling
+    blueprints_to_register = [
+        ("app.routes.dashboard", "dashboard_bp", False),
+        ("app.routes.inmate", "inmate_bp", False),
+        ("app.routes.camera", "camera_bp", False),
+        ("app.routes.settings", "settings_bp", False),
+        ("app.routes.api", "api_bp", True),
+        ("app.routes.api.camera_routes", "api_camera", True),
+        ("app.routes.api.user_dashboard", "user_dashboard_bp", True),  # User dashboard API
+        ("app.routes.admin_users", "admin_users_bp", False),
+        ("app.routes.admin.user_admin", "admin_user_bp", False),
+        ("app.routes.recognition", "recognition_bp", False),
+        ("app.routes.recognition_api", "recognition_api_bp", True),
+        ("app.routes.alerts", "alerts_api_bp", True),
+        ("app.routes.alerts", "alerts_page_bp", False),
+        ("app.routes.admin_dashboard", "admin_dashboard_bp", False),
+        ("app.routes.api.user_routes", "user_api_bp", True),
+        ("app.routes.upload_recognition", "upload_bp", True),
+    ]
 
+    for module_path, bp_name, should_exempt_csrf in blueprints_to_register:
+        try:
+            mod = __import__(module_path, fromlist=[bp_name])
+            bp = getattr(mod, bp_name)
+            if should_exempt_csrf:
+                csrf.exempt(bp)
+            app.register_blueprint(bp)
+        except Exception as e:
+            # Log but continue during development
+            app.logger.warning(f"Could not register blueprint {bp_name}: {e}")
+
+    # ─────────────────────────────────────────────
+    # Socket.IO events
+    # ─────────────────────────────────────────────
+    try:
+        from app import socket_events  # noqa: F401
+    except Exception:
+        pass
+
+    # ─────────────────────────────────────────────
+    # Create database tables if they don't exist
+    # ─────────────────────────────────────────────
+    with app.app_context():
+        # Import models to ensure they're registered
+        from app.models import User, Inmate, Camera, Alert, Match, FacialEmbedding  # noqa: F401
+
+        # Create instance folder if it doesn't exist
+        instance_path = os.path.join(os.path.dirname(__file__), '..', 'instance')
+        os.makedirs(instance_path, exist_ok=True)
+
+        # Create tables
+        db.create_all()
+
+    # ─────────────────────────────────────────────
+    # Root route
+    # ─────────────────────────────────────────────
     @app.route("/")
     def index():
         return redirect(url_for("auth.login"))

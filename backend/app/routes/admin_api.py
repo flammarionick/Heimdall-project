@@ -295,21 +295,23 @@ def create_inmate():
             file.save(save_path)
             mugshot_path = f"/static/inmate_images/{unique_filename}"
 
-            # Extract face encoding using HOG features
+            # Extract FaceNet embedding for face recognition
             try:
                 import cv2
-                import numpy as np
-                from app.utils.hog_features import extract_hog_3060
+                from app.utils.embedding_client import extract_embedding_from_frame
 
                 img = cv2.imread(save_path)
                 if img is not None:
-                    # Resize to standard size
-                    img_resized = cv2.resize(img, (128, 128))
-                    face_encoding = extract_hog_3060(img_resized)
+                    # FaceNet works best with 160x160 but embedding service handles resizing
+                    face_encoding = extract_embedding_from_frame(img)
                     if face_encoding is not None:
-                        face_encoding = face_encoding.tolist()
+                        print(f"[create_inmate] Successfully extracted FaceNet embedding with {len(face_encoding)} features")
+                    else:
+                        print("[create_inmate] Warning: Embedding service returned None. Is it running on port 5001?")
             except Exception as e:
                 print(f"[create_inmate] Error extracting face encoding: {e}")
+                import traceback
+                traceback.print_exc()
                 # Continue without face encoding - it can be added later
 
     if not mugshot_path:

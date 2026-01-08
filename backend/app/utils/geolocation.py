@@ -43,7 +43,7 @@ def find_nearby_facilities(lat, lng, radius_km=50):
         radius_km: Search radius in kilometers (default 50km)
 
     Returns:
-        List of User objects within the radius
+        List of dictionaries with user data (not ORM objects to avoid session issues)
     """
     from app.models.user import User
 
@@ -57,8 +57,10 @@ def find_nearby_facilities(lat, lng, radius_km=50):
     for user in users:
         dist = haversine_distance(lat, lng, user.latitude, user.longitude)
         if dist <= radius_km:
+            # Store user data as dictionary, not ORM object
             nearby.append({
-                'user': user,
+                'user_id': user.id,
+                'user_email': user.email,
                 'distance_km': round(dist, 2)
             })
 

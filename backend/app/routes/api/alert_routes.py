@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from app import socketio
+from app.extensions import socketio
 from datetime import datetime
 
 api_alert = Blueprint('api_alert', __name__, url_prefix='/api')

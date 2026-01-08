@@ -11,10 +11,16 @@ import LiveMonitoring from "./pages/LiveMonitoring.jsx";
 import ManageCameras from "./pages/ManageCameras.jsx";
 import ManageUsers from "./pages/ManageUsers.jsx";
 import UploadRecognition from "./pages/UploadRecognition.jsx";
+import Surveillance from "./pages/Surveillance.jsx";
+import AlarmIndicator from "./components/AlarmIndicator.jsx";
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      {/* Global alarm indicator - shows on all pages when alarm is active */}
+      <AlarmIndicator />
+
+      <Routes>
       <Route path="/login" element={<Login />} />
 
       {/* Admin */}
@@ -90,6 +96,14 @@ export default function App() {
           </RequireUser>
         }
       />
+      <Route
+        path="/admin/surveillance"
+        element={
+          <RequireUser>
+            <Surveillance />
+          </RequireUser>
+        }
+      />
 
       {/* User */}
       <Route
@@ -104,5 +118,6 @@ export default function App() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </>
   );
 }

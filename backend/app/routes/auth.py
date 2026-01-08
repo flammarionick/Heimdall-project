@@ -1,72 +1,56 @@
 # app/routes/auth.py
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
-from flask_login import login_user, logout_user, login_required
+"""
+Server-rendered authentication pages (for CSRF-protected form logins).
+This is a fallback for traditional server-rendered auth if needed.
+The React frontend uses the JSON API in auth_api.py instead.
+"""
+
+from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.security import check_password_hash
+
+from app.extensions import db
 from app.models.user import User
-from app.forms import LoginForm
-from app import db, login_manager
-import os
-auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")  # change if needed
+auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
-# 🎯 Route for frontend React API login
-@auth_bp.route('/api/login', methods=['POST'])
-def api_login():
-    try:
-        data = request.get_json()
-        print("Received data from frontend:", data)
+@auth_bp.route("/login", methods=["GET", "POST"])
+def login():
+    """Server-rendered login page (fallback)."""
+    if current_user.is_authenticated:
+        if current_user.is_admin:
+            return redirect(url_for("admin_dashboard.admin_home"))
+        return redirect(url_for("dashboard.dashboard_home"))
 
-        input_value = data.get('email')
-        password = data.get('password')
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
 
-        if not input_value or not password:
-            return jsonify({"message": "Missing credentials"}), 400
-
-        user = User.query.filter(
-            (User.username == input_value) | (User.email == input_value)
-        ).first()
-
-        print("Matched user:", user.username if user else "None")
+        user = User.query.filter_by(username=username).first()
 
         if user and user.check_password(password):
-            print("Password matched.")
+            if user.is_suspended:
+                flash("Your account has been suspended.", "error")
+                return redirect(url_for("auth.login"))
+
             login_user(user)
-            return jsonify({
-                "message": "Login successful",
-                "role": "admin" if user.is_admin else "user"
-            }), 200
+            next_page = request.args.get("next")
+            if next_page:
+                return redirect(next_page)
+            if user.is_admin:
+                return redirect(url_for("admin_dashboard.admin_home"))
+            return redirect(url_for("dashboard.dashboard_home"))
 
-        print("Invalid login attempt.")
-        return jsonify({"message": "Invalid credentials"}), 401
+        flash("Invalid username or password.", "error")
 
-    except Exception as e:
-        print("Login error:", str(e))
-        return jsonify({"message": "Server error"}), 500
-
-
-# 🧾 Traditional server-rendered login (e.g. if you still use Jinja forms)
-@auth_bp.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user and user.check_password(form.password.data):
-            login_user(user)
-            # Redirect to React admin screen
-            return redirect(f"{FRONTEND_URL}/admin/dashboard")
-        else:
-            flash('Invalid credentials', 'danger')
-    return render_template('auth/login.html', form=form)
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+    return render_template("auth/login.html")
 
 
-@auth_bp.route('/logout')
+@auth_bp.route("/logout")
 @login_required
 def logout():
+    """Logout and redirect to login page."""
     logout_user()
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('auth.login'))
+    flash("You have been logged out.", "info")
+    return redirect(url_for("auth.login"))

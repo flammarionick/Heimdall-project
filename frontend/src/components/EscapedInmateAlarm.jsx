@@ -1,45 +1,20 @@
 // frontend/src/components/EscapedInmateAlarm.jsx
 /**
  * Full-screen alarm component for escaped inmate detection.
- * Plays siren audio on loop until manually dismissed.
+ * Visual display only - audio is managed by AlarmContext for persistence.
+ * Dismissing this modal hides the visual but audio continues until alert is resolved.
  */
 
-import { useEffect, useRef } from 'react';
-import { AlertTriangle, X, MapPin, Clock, User, Shield } from 'lucide-react';
+import { AlertTriangle, X, MapPin, Clock, User, Shield, Volume2, VolumeX } from 'lucide-react';
+import { useAlarm } from '../contexts/AlarmContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 function EscapedInmateAlarm({ inmate, alertId, detectionLocation, timestamp, onDismiss }) {
-  const audioRef = useRef(null);
-
-  useEffect(() => {
-    // Play siren on loop
-    try {
-      audioRef.current = new Audio(`${API_BASE}/static/sounds/siren.wav`);
-      audioRef.current.loop = true;
-      audioRef.current.volume = 0.7;
-      audioRef.current.play().catch(err => {
-        console.warn('Audio autoplay blocked:', err);
-      });
-    } catch (err) {
-      console.error('Failed to load siren audio:', err);
-    }
-
-    // Cleanup: stop audio when component unmounts
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-    };
-  }, []);
+  const { isAudioPlaying, isInSilentPeriod } = useAlarm();
 
   const handleDismiss = () => {
-    // Stop audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
+    // Only dismiss the visual - audio continues via AlarmContext
     onDismiss();
   };
 
@@ -60,9 +35,19 @@ function EscapedInmateAlarm({ inmate, alertId, detectionLocation, timestamp, onD
       {/* Main content */}
       <div className="relative z-10 bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden">
         {/* Header */}
-        <div className="bg-red-600 text-white px-6 py-4 flex items-center gap-3">
-          <AlertTriangle className="w-8 h-8 animate-bounce" />
-          <h1 className="text-2xl font-bold">ESCAPED INMATE DETECTED</h1>
+        <div className="bg-red-600 text-white px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="w-8 h-8 animate-bounce" />
+            <h1 className="text-2xl font-bold">ESCAPED INMATE DETECTED</h1>
+          </div>
+          {/* Audio status indicator */}
+          <div className="flex items-center gap-2">
+            {isAudioPlaying ? (
+              <Volume2 className="w-5 h-5 animate-pulse" />
+            ) : isInSilentPeriod ? (
+              <VolumeX className="w-5 h-5 opacity-50" />
+            ) : null}
+          </div>
         </div>
 
         {/* Inmate details */}
@@ -122,6 +107,25 @@ function EscapedInmateAlarm({ inmate, alertId, detectionLocation, timestamp, onD
             <strong>ALERT:</strong> This individual is classified as an escaped inmate.
             Exercise extreme caution and follow security protocols.
           </div>
+
+          {/* Audio status message */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-blue-800 text-sm">
+            <div className="flex items-center gap-2">
+              {isAudioPlaying ? (
+                <>
+                  <Volume2 className="w-4 h-4" />
+                  <span><strong>Alarm sounding.</strong> To stop the alarm, go to Alerts & Logs and resolve this alert.</span>
+                </>
+              ) : isInSilentPeriod ? (
+                <>
+                  <VolumeX className="w-4 h-4" />
+                  <span><strong>Silent period.</strong> Alarm will resume shortly. Resolve alert to stop permanently.</span>
+                </>
+              ) : (
+                <span>Alarm will sound until alert is resolved.</span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Dismiss button */}
@@ -132,10 +136,10 @@ function EscapedInmateAlarm({ inmate, alertId, detectionLocation, timestamp, onD
                      flex items-center justify-center gap-2 transition-colors text-lg"
           >
             <X className="w-5 h-5" />
-            ACKNOWLEDGE ALERT
+            DISMISS VISUAL
           </button>
           <p className="text-center text-gray-500 text-xs mt-2">
-            Click to acknowledge and stop the alarm
+            Hides this popup. <strong>Alarm continues</strong> until resolved in Alerts & Logs.
           </p>
         </div>
       </div>
