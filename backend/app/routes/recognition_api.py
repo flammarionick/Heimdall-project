@@ -8,7 +8,10 @@ from app.models.active_recognition import ActiveRecognition
 from app.extensions import db
 from app.utils.embedding_client import extract_embedding_from_frame
 from app.utils.geolocation import find_nearby_facilities, get_detection_location, haversine_distance
-from app.utils.image_preprocessing import aggressive_denoise, deblur_image, strong_deblur
+from app.utils.image_preprocessing import (
+    aggressive_denoise, deblur_image, strong_deblur,
+    remove_salt_pepper_noise, deblur_motion_horizontal, deblur_motion_multi_direction
+)
 from scipy.spatial.distance import cosine
 from datetime import datetime, timedelta
 
@@ -173,6 +176,61 @@ def _detect_and_crop_face(frame, use_detection=True):
 
     return face_resized
 
+
+def _detect_all_faces(frame):
+    """
+    Detect ALL faces in a frame and return list of cropped face images with bounding boxes.
+
+    Args:
+        frame: BGR image
+
+    Returns:
+        List of tuples: [(face_crop, bbox), ...] where bbox is (x, y, w, h)
+    """
+    if frame is None:
+        return []
+
+    h, w = frame.shape[:2]
+
+    # Use face detection
+    face_cascade = _get_face_cascade()
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    faces = []
+    for min_neighbors in [5, 4, 3, 2]:
+        faces = face_cascade.detectMultiScale(
+            gray,
+            scaleFactor=1.1,
+            minNeighbors=min_neighbors,
+            minSize=(30, 30)
+        )
+        if len(faces) > 0:
+            break
+
+    if len(faces) == 0:
+        log(f"[multi-face] No faces detected in image {w}x{h}")
+        return []
+
+    log(f"[multi-face] Detected {len(faces)} faces in image")
+
+    # Process each face
+    face_crops = []
+    for i, (x, y, fw, fh) in enumerate(faces):
+        padding = int(max(fw, fh) * 0.2)
+        x1 = max(0, x - padding)
+        y1 = max(0, y - padding)
+        x2 = min(frame.shape[1], x + fw + padding)
+        y2 = min(frame.shape[0], y + fh + padding)
+
+        face_crop = frame[y1:y2, x1:x2]
+        face_resized = cv2.resize(face_crop, (128, 128))
+
+        bbox = (int(x), int(y), int(fw), int(fh))
+        face_crops.append((face_resized, bbox))
+        log(f"[multi-face] Face {i+1}: bbox={bbox}, crop size={face_crop.shape}")
+
+    return face_crops
+
 def _load_inmate_encodings():
     """
     Load all inmate face encodings from database.
@@ -277,74 +335,73 @@ def _decode_image_from_file_field(req, field_name='frame') -> np.ndarray:
 def _generate_query_augmentations(face_crop):
     """
     Generate augmented versions of query image for robust matching.
-    Handles rotated, grayscale, exposure-changed, noisy, and blurred images.
+    Optimized to prevent memory exhaustion - max ~15 augmentations.
     """
     augmentations = [face_crop]
     h, w = face_crop.shape[:2]
     center = (w // 2, h // 2)
 
-    # Counter-rotations (including 180 for upside-down images)
-    for angle in [-20, -10, 10, 20, 90, 180, 270]:
+    # CLAHE normalization (used multiple times below)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+
+    # === Essential rotations (reduced from 7 to 3) ===
+    for angle in [-15, 15, 180]:
         M = cv2.getRotationMatrix2D(center, angle, 1.0)
         rotated = cv2.warpAffine(face_crop, M, (w, h), borderMode=cv2.BORDER_REPLICATE)
         augmentations.append(rotated)
 
-    # Grayscale
+    # === Grayscale ===
     gray = cv2.cvtColor(face_crop, cv2.COLOR_BGR2GRAY)
     gray_bgr = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
     augmentations.append(gray_bgr)
 
-    # Exposure corrections
+    # === Exposure corrections ===
     bright = cv2.convertScaleAbs(face_crop, alpha=1.3, beta=30)
-    dark = cv2.convertScaleAbs(face_crop, alpha=0.7, beta=-30)
     augmentations.append(bright)
-    augmentations.append(dark)
 
-    # CLAHE normalization
+    # === CLAHE normalization ===
     lab = cv2.cvtColor(face_crop, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     l = clahe.apply(l)
     lab = cv2.merge([l, a, b])
     clahe_img = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
     augmentations.append(clahe_img)
 
-    # Grayscale + rotation
-    M = cv2.getRotationMatrix2D(center, 15, 1.0)
-    gray_rot = cv2.warpAffine(gray_bgr, M, (w, h), borderMode=cv2.BORDER_REPLICATE)
-    augmentations.append(gray_rot)
-
-    # === NEW: Noise reduction augmentations ===
-    # Aggressive denoising for noisy images
+    # === Gaussian noise removal (NL means) ===
     try:
         denoised = aggressive_denoise(face_crop)
         augmentations.append(denoised)
-
-        # Denoised + CLAHE for noisy dark images
-        lab = cv2.cvtColor(denoised, cv2.COLOR_BGR2LAB)
-        l, a, b = cv2.split(lab)
-        l = clahe.apply(l)
-        lab = cv2.merge([l, a, b])
-        denoised_clahe = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
-        augmentations.append(denoised_clahe)
     except Exception:
-        pass  # Skip if denoising fails
+        pass
 
-    # === NEW: Deblurring augmentations ===
-    # Sharpening for blurred images
+    # === General deblurring ===
     try:
-        sharpened = deblur_image(face_crop)
+        sharpened = strong_deblur(face_crop)
         augmentations.append(sharpened)
-
-        # Strong sharpening for heavily blurred images
-        strong_sharp = strong_deblur(face_crop)
-        augmentations.append(strong_sharp)
-
-        # Deblurred + denoised (for combined distortions)
-        deblur_denoise = aggressive_denoise(sharpened)
-        augmentations.append(deblur_denoise)
     except Exception:
-        pass  # Skip if deblurring fails
+        pass
+
+    # === Salt & pepper noise removal (median filter) ===
+    try:
+        sp_denoised = remove_salt_pepper_noise(face_crop, kernel_size=5)
+        augmentations.append(sp_denoised)
+    except Exception:
+        pass
+
+    # === Motion blur handling (horizontal) ===
+    try:
+        motion_h = deblur_motion_horizontal(face_crop, kernel_size=11)
+        augmentations.append(motion_h)
+    except Exception:
+        pass
+
+    # === Combined: denoised + sharpened (for combined distortions) ===
+    try:
+        combined = aggressive_denoise(face_crop)
+        combined = strong_deblur(combined)
+        augmentations.append(combined)
+    except Exception:
+        pass
 
     return augmentations
 
@@ -599,6 +656,187 @@ def _run_recognition(frame, use_detection=True) -> dict:
         return {"error": str(e), "status_code": 500}
 
 
+def _match_single_face(face_crop, inmate_encodings):
+    """
+    Match a single face crop against inmate database.
+    Returns match result dict or None.
+    """
+    try:
+        # Generate query augmentations for robust matching
+        query_augmentations = _generate_query_augmentations(face_crop)
+
+        # Extract embeddings for all augmentations
+        query_embeddings = []
+        for aug_img in query_augmentations:
+            emb = extract_embedding_from_frame(aug_img)
+            if emb is not None:
+                query_embeddings.append(np.array(emb, dtype=np.float32))
+
+        if not query_embeddings:
+            return None
+
+        # Find best match using cosine distance
+        best_match = None
+        best_distance = float('inf')
+
+        for inmate, encodings_list in inmate_encodings:
+            try:
+                min_dist_for_inmate = float('inf')
+                for query_emb in query_embeddings:
+                    for encoding in encodings_list:
+                        dist = cosine(query_emb, encoding)
+                        if dist < min_dist_for_inmate:
+                            min_dist_for_inmate = dist
+
+                if min_dist_for_inmate < best_distance:
+                    best_distance = min_dist_for_inmate
+                    best_match = inmate
+            except Exception:
+                continue
+
+        # Check if match is above threshold
+        if best_match and best_distance < SIMILARITY_THRESHOLD:
+            confidence = float(round((1 - best_distance) * 100, 1))
+            if confidence >= MIN_CONFIDENCE:
+                return {
+                    "id": best_match["id"],
+                    "inmate_id": best_match["inmate_id"],
+                    "name": best_match["name"],
+                    "status": best_match["status"],
+                    "mugshot_path": best_match["mugshot_path"],
+                    "risk_level": best_match["risk_level"],
+                    "crime": best_match["crime"],
+                    "confidence": confidence,
+                    "distance": float(round(best_distance, 4))
+                }
+
+        return None
+
+    except Exception as e:
+        log(f"[multi-face] Error matching face: {e}")
+        return None
+
+
+def _run_multi_recognition(frame) -> dict:
+    """
+    Run recognition pipeline on ALL faces detected in frame.
+    Returns a dict with list of all matched persons.
+
+    Args:
+        frame: BGR image
+    """
+    if frame is None:
+        return {"error": "No valid image provided", "status_code": 400}
+
+    try:
+        # Detect all faces in the image
+        face_data = _detect_all_faces(frame)
+
+        if not face_data:
+            # Fallback: try single-face mode
+            log("[multi-face] No faces detected, falling back to single-face mode")
+            return _run_recognition(frame, use_detection=False)
+
+        log(f"[multi-face] Processing {len(face_data)} detected faces")
+
+        # Load cached inmate encodings
+        inmate_encodings = _load_inmate_encodings()
+
+        if not inmate_encodings:
+            return {"error": "No inmate face encodings in database", "status_code": 500}
+
+        # Process each face
+        matches = []
+        unmatched_faces = []
+        escaped_inmates = []
+
+        for i, (face_crop, bbox) in enumerate(face_data):
+            log(f"[multi-face] Processing face {i+1}/{len(face_data)}")
+
+            match = _match_single_face(face_crop, inmate_encodings)
+
+            face_info = {
+                "face_index": i + 1,
+                "bbox": {"x": bbox[0], "y": bbox[1], "width": bbox[2], "height": bbox[3]}
+            }
+
+            if match:
+                match["face_info"] = face_info
+                matches.append(match)
+
+                # Track escaped inmates
+                if str(match.get("status", "")).lower() == "escaped":
+                    escaped_inmates.append(match)
+                    log(f"[multi-face] Face {i+1}: ESCAPED INMATE - {match['name']} ({match['confidence']}%)")
+                else:
+                    log(f"[multi-face] Face {i+1}: Match - {match['name']} ({match['confidence']}%)")
+            else:
+                unmatched_faces.append(face_info)
+                log(f"[multi-face] Face {i+1}: No match")
+
+        # Determine overall status
+        if escaped_inmates:
+            status = "escaped_inmates_detected"
+        elif matches:
+            status = "matches_found"
+        else:
+            status = "no_matches"
+
+        # Create alerts for escaped inmates
+        for escaped in escaped_inmates:
+            try:
+                alert = Alert(
+                    message=f"ESCAPED INMATE DETECTED: {escaped['name']} ({escaped['confidence']}% confidence)",
+                    level="danger",
+                    confidence=escaped['confidence'],
+                    inmate_id=escaped["id"],
+                    resolved=False
+                )
+                db.session.add(alert)
+                db.session.commit()
+
+                # Emit socket event
+                socketio.emit('escaped_inmate_alarm', {
+                    'inmate': escaped,
+                    'alert_id': alert.id,
+                    'timestamp': datetime.utcnow().isoformat(),
+                    'multi_face_detection': True
+                })
+            except Exception as e:
+                log(f"[multi-face] Failed to create alert: {e}")
+                db.session.rollback()
+
+        # Emit general match event if any matches found
+        if matches:
+            try:
+                socketio.emit('multi_face_match', {
+                    'total_faces': len(face_data),
+                    'matched_count': len(matches),
+                    'escaped_count': len(escaped_inmates),
+                    'matches': [{'name': m['name'], 'confidence': m['confidence']} for m in matches]
+                })
+            except Exception as e:
+                log(f"[multi-face] Socket emit failed: {e}")
+
+        return {
+            "status": status,
+            "total_faces_detected": len(face_data),
+            "matched_count": len(matches),
+            "unmatched_count": len(unmatched_faces),
+            "matches": matches,
+            "unmatched_faces": unmatched_faces,
+            "has_escaped_inmates": len(escaped_inmates) > 0,
+            "escaped_count": len(escaped_inmates),
+            "status_code": 200
+        }
+
+    except Exception as e:
+        print("[recognition_api] ERROR during multi-recognition:", e)
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e), "status_code": 500}
+
+
 @recognition_api_bp.route('/match', methods=['POST'])
 @login_or_jwt_required
 def recognize_face():
@@ -621,16 +859,19 @@ def upload_recognition():
     """
     Accepts: multipart/form-data with file field 'file'
     Alternative endpoint for the upload UI.
-    Uses use_detection=False to ensure consistent processing with stored mugshots.
+
+    Optional form field 'multi_face':
+      - If 'true' or '1': Detect and match ALL faces in the image
+      - Otherwise: Single-face mode (legacy behavior)
     """
-    # Write to file immediately to confirm request arrived
     import os
     log_path = os.path.join(os.path.dirname(__file__), '..', '..', 'upload_requests.log')
     with open(log_path, 'a') as f:
-        from datetime import datetime
         f.write(f"\n[{datetime.now()}] /upload endpoint HIT\n")
         f.write(f"  Files in request: {list(request.files.keys())}\n")
+
     log("[recognition_api] /upload endpoint called")
+
     # Try 'file' first, then 'frame' as fallback
     frame = _decode_image_from_file_field(request, 'file')
     log(f"[recognition_api] Frame from 'file': {frame is not None}")
@@ -640,7 +881,60 @@ def upload_recognition():
     if frame is None:
         return jsonify({"error": "No image uploaded (use 'file' or 'frame' field)"}), 400
 
-    # use_detection=False: Just resize, don't detect face (consistent with mugshot storage)
-    result = _run_recognition(frame, use_detection=False)
+    # Check for multi-face mode
+    multi_face = request.form.get('multi_face', 'false').lower() in ('true', '1', 'yes')
+
+    if multi_face:
+        log("[recognition_api] Multi-face mode enabled")
+        result = _run_multi_recognition(frame)
+    else:
+        # use_detection=False: Just resize, don't detect face (consistent with mugshot storage)
+        result = _run_recognition(frame, use_detection=False)
+
+    status_code = result.pop("status_code", 200)
+    return jsonify(result), status_code
+
+
+@recognition_api_bp.route('/upload-multi', methods=['POST'])
+@login_or_jwt_required
+def upload_multi_recognition():
+    """
+    Multi-face recognition endpoint.
+    Accepts: multipart/form-data with file field 'file'
+    Detects ALL faces in the image and matches each against the database.
+
+    Returns:
+        {
+            "status": "matches_found" | "escaped_inmates_detected" | "no_matches",
+            "total_faces_detected": int,
+            "matched_count": int,
+            "unmatched_count": int,
+            "matches": [
+                {
+                    "inmate_id": str,
+                    "name": str,
+                    "confidence": float,
+                    "status": str,
+                    "face_info": {"face_index": int, "bbox": {x, y, width, height}}
+                },
+                ...
+            ],
+            "unmatched_faces": [{"face_index": int, "bbox": {...}}, ...],
+            "has_escaped_inmates": bool,
+            "escaped_count": int
+        }
+    """
+    log("[recognition_api] /upload-multi endpoint called")
+
+    # Try 'file' first, then 'frame' as fallback
+    frame = _decode_image_from_file_field(request, 'file')
+    if frame is None:
+        frame = _decode_frame_from_request(request)
+
+    if frame is None:
+        return jsonify({"error": "No image uploaded (use 'file' or 'frame' field)"}), 400
+
+    log(f"[recognition_api] Multi-face recognition on image {frame.shape}")
+    result = _run_multi_recognition(frame)
     status_code = result.pop("status_code", 200)
     return jsonify(result), status_code

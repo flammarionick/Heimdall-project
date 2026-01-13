@@ -35,7 +35,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BASE_URL = "http://127.0.0.1:5002"
 LOGIN_API = f"{BASE_URL}/auth/api/login"
 RECOGNITION_API = f"{BASE_URL}/api/recognition/upload"
-TOTAL_TESTS = 100  # Reduced for faster testing; change to 1000 for full test
+TOTAL_TESTS = 500  # Reduced to avoid memory issues; can run twice for 1000 total
 RESULTS_FILE = "recognition_performance_results.json"
 
 # Default credentials
