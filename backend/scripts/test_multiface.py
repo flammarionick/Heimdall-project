@@ -228,11 +228,17 @@ def main():
     print("ANALYSIS")
     print("="*60)
     print("""
-NEW Multi-Face Recognition System:
-- Uses Haar Cascade to detect ALL faces in an image
-- Extracts FaceNet embeddings for EACH face separately
-- Matches EACH face against the inmate database
-- Returns a list of ALL matched persons with bounding boxes
+IMPROVED Multi-Face Recognition System (MTCNN + Periocular Fusion):
+- Uses MTCNN neural network to detect ALL faces (better than Haar Cascade)
+- Extracts BOTH face AND periocular (eye region) embeddings for each face
+- Uses adaptive fusion scoring based on glasses detection
+- Falls back to Haar Cascade if embedding service unavailable
+
+Key Improvements:
+- MTCNN detects faces at various angles, poses, and partial occlusions
+- Periocular embeddings improve accuracy when glasses/masks present
+- Glasses detection adjusts fusion weights automatically
+- Lower detection thresholds catch more faces in group photos
 
 API Endpoints:
 - POST /api/recognition/upload-multi  (dedicated multi-face endpoint)
@@ -241,9 +247,9 @@ API Endpoints:
 Response includes:
 - total_faces_detected: Number of faces found
 - matched_count: Number of faces matched to inmates
-- matches: List of all matched inmates with confidence and bbox
+- matches: List with confidence, bbox, and match_method (fusion/face_only)
 - unmatched_faces: List of faces that didn't match anyone
-- has_escaped_inmates: Boolean flag for critical alerts
+- detection_method: 'mtcnn_periocular_fusion' or 'haar_cascade_legacy'
 """)
 
 

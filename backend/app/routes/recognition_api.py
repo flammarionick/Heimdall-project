@@ -6,7 +6,13 @@ from app.models.inmate import Inmate
 from app.models.alert import Alert
 from app.models.active_recognition import ActiveRecognition
 from app.extensions import db
-from app.utils.embedding_client import extract_embedding_from_frame
+from app.utils.embedding_client import (
+    extract_embedding_from_frame,
+    extract_full_embeddings,
+    extract_periocular_embedding,
+    compute_fusion_score,
+    detect_all_faces
+)
 from app.utils.geolocation import find_nearby_facilities, get_detection_location, haversine_distance
 from app.utils.image_preprocessing import (
     aggressive_denoise, deblur_image, strong_deblur,
@@ -19,6 +25,9 @@ import numpy as np
 import cv2
 import os
 import sys
+
+# Enable/disable periocular fusion matching
+ENABLE_PERIOCULAR_FUSION = True
 
 def log(msg):
     """Log to both stdout and a file for debugging."""
@@ -233,9 +242,9 @@ def _detect_all_faces(frame):
 
 def _load_inmate_encodings():
     """
-    Load all inmate face encodings from database.
+    Load all inmate face and periocular encodings from database.
     Supports both legacy single encoding and multi-embeddings.
-    Returns list of (inmate_data, [encodings]) tuples.
+    Returns list of (inmate_data, [face_encodings], [periocular_encodings]) tuples.
     """
     global _inmate_cache, _cache_timestamp
     import time
@@ -246,7 +255,7 @@ def _load_inmate_encodings():
     if _inmate_cache is None or _cache_timestamp is None or (current_time - _cache_timestamp) > 30:
         try:
             # Use a fresh query and extract data immediately
-            # Select columns including multi-embeddings
+            # Select columns including multi-embeddings and periocular
             inmates = db.session.query(
                 Inmate.id,
                 Inmate.inmate_id,
@@ -256,7 +265,10 @@ def _load_inmate_encodings():
                 Inmate.risk_level,
                 Inmate.crime,
                 Inmate.face_encoding,
-                Inmate.face_encodings_json
+                Inmate.face_encodings_json,
+                Inmate.periocular_encoding,
+                Inmate.periocular_encodings_json,
+                Inmate.has_glasses_in_mugshot
             ).filter(
                 db.or_(
                     Inmate.face_encoding.isnot(None),
@@ -266,25 +278,42 @@ def _load_inmate_encodings():
 
             # Cache as plain data with list of all encodings per inmate
             new_cache = []
-            total_encodings = 0
+            total_face_encodings = 0
+            total_periocular_encodings = 0
+
             for row in inmates:
-                encodings = []
+                face_encodings = []
+                periocular_encodings = []
 
-                # Add legacy single encoding if exists
+                # Add legacy single face encoding if exists
                 if row.face_encoding is not None:
-                    encodings.append(np.array(row.face_encoding, dtype=np.float32))
+                    face_encodings.append(np.array(row.face_encoding, dtype=np.float32))
 
-                # Add multi-embeddings if exists
+                # Add multi face embeddings if exists
                 if row.face_encodings_json:
                     try:
                         multi_enc = json.loads(row.face_encodings_json)
                         for enc in multi_enc:
                             if enc is not None:
-                                encodings.append(np.array(enc, dtype=np.float32))
+                                face_encodings.append(np.array(enc, dtype=np.float32))
                     except (json.JSONDecodeError, TypeError):
                         pass
 
-                if encodings:
+                # Add legacy single periocular encoding if exists
+                if row.periocular_encoding is not None:
+                    periocular_encodings.append(np.array(row.periocular_encoding, dtype=np.float32))
+
+                # Add multi periocular embeddings if exists
+                if row.periocular_encodings_json:
+                    try:
+                        multi_peri = json.loads(row.periocular_encodings_json)
+                        for enc in multi_peri:
+                            if enc is not None:
+                                periocular_encodings.append(np.array(enc, dtype=np.float32))
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+
+                if face_encodings:
                     inmate_data = {
                         "id": row.id,
                         "inmate_id": row.inmate_id,
@@ -293,13 +322,15 @@ def _load_inmate_encodings():
                         "mugshot_path": row.mugshot_path,
                         "risk_level": row.risk_level,
                         "crime": row.crime,
+                        "has_glasses_in_mugshot": row.has_glasses_in_mugshot or False,
                     }
-                    new_cache.append((inmate_data, encodings))
-                    total_encodings += len(encodings)
+                    new_cache.append((inmate_data, face_encodings, periocular_encodings))
+                    total_face_encodings += len(face_encodings)
+                    total_periocular_encodings += len(periocular_encodings)
 
             _inmate_cache = new_cache
             _cache_timestamp = current_time
-            print(f"[recognition_api] Loaded {len(_inmate_cache)} inmates with {total_encodings} total encodings into cache")
+            print(f"[recognition_api] Loaded {len(_inmate_cache)} inmates: {total_face_encodings} face + {total_periocular_encodings} periocular encodings")
         except Exception as e:
             print(f"[recognition_api] Error loading cache: {e}")
             import traceback
@@ -410,6 +441,7 @@ def _run_recognition(frame, use_detection=True) -> dict:
     """
     Run the recognition pipeline on a frame using similarity matching.
     Uses query-time augmentation for robust matching with distorted images.
+    Supports periocular fusion matching for glasses/occlusion robustness.
     Returns a dict with status and result.
 
     Args:
@@ -435,7 +467,7 @@ def _run_recognition(frame, use_detection=True) -> dict:
         query_augmentations = _generate_query_augmentations(face_crop)
         log(f"[recognition_api] Generated {len(query_augmentations)} query augmentations")
 
-        # Extract embeddings for all augmentations
+        # Extract face embeddings for all augmentations
         query_embeddings = []
         for aug_img in query_augmentations:
             emb = extract_embedding_from_frame(aug_img)
@@ -446,9 +478,29 @@ def _run_recognition(frame, use_detection=True) -> dict:
             return {"error": "Embedding service unavailable. Is it running on port 5001?", "status_code": 503}
 
         input_features = query_embeddings[0]  # Keep first for compatibility
-        log(f"[recognition_api] Got {len(query_embeddings)} query embeddings (FaceNet 512-dim)")
+        log(f"[recognition_api] Got {len(query_embeddings)} query face embeddings (FaceNet 512-dim)")
 
-        # Load cached inmate encodings
+        # === PERIOCULAR FUSION: Extract periocular embedding and detect glasses ===
+        query_periocular_emb = None
+        glasses_detected = False
+        glasses_confidence = 0.0
+
+        if ENABLE_PERIOCULAR_FUSION:
+            try:
+                # Try to get periocular embedding from the original frame (not face crop)
+                peri_result = extract_periocular_embedding(frame)
+                if peri_result and peri_result.get('embedding'):
+                    query_periocular_emb = np.array(peri_result['embedding'], dtype=np.float32)
+                    glasses_detected = peri_result.get('glasses_detected', False)
+                    glasses_confidence = peri_result.get('glasses_confidence', 0.0)
+                    log(f"[recognition_api] Periocular embedding extracted. Glasses: {glasses_detected} ({glasses_confidence:.2f})")
+                else:
+                    log("[recognition_api] Periocular extraction failed, using face-only matching")
+            except Exception as e:
+                log(f"[recognition_api] Periocular extraction error: {e}")
+                # Continue with face-only matching
+
+        # Load cached inmate encodings (now includes periocular)
         inmate_encodings = _load_inmate_encodings()
 
         if not inmate_encodings:
@@ -456,36 +508,69 @@ def _run_recognition(frame, use_detection=True) -> dict:
 
         log(f"[recognition_api] Comparing against {len(inmate_encodings)} cached inmates")
 
-        # Find best match using cosine distance
-        # Now supports multiple embeddings per inmate for robust matching
+        # Find best match using cosine distance with optional periocular fusion
         best_match = None
         best_distance = float('inf')
+        best_match_method = 'face_only'
         top_3_matches = []
 
-        for inmate, encodings_list in inmate_encodings:
+        for inmate, face_encodings_list, periocular_encodings_list in inmate_encodings:
             try:
-                # Compare ALL query embeddings against ALL inmate embeddings
-                # Use minimum distance (best match across all combinations)
-                min_dist_for_inmate = float('inf')
+                # Compare ALL query embeddings against ALL inmate face embeddings
+                min_face_dist = float('inf')
                 for query_emb in query_embeddings:
-                    for encoding in encodings_list:
+                    for encoding in face_encodings_list:
                         dist = cosine(query_emb, encoding)
-                        if dist < min_dist_for_inmate:
-                            min_dist_for_inmate = dist
+                        if dist < min_face_dist:
+                            min_face_dist = dist
 
-                top_3_matches.append((inmate['inmate_id'], min_dist_for_inmate, len(encodings_list)))
+                # === PERIOCULAR FUSION ===
+                # If we have periocular embeddings for both query and inmate, use fusion
+                final_distance = min_face_dist
+                match_method = 'face_only'
 
-                if min_dist_for_inmate < best_distance:
-                    best_distance = min_dist_for_inmate
+                if (ENABLE_PERIOCULAR_FUSION and
+                    query_periocular_emb is not None and
+                    periocular_encodings_list):
+
+                    # Find best periocular match
+                    min_peri_dist = float('inf')
+                    for peri_enc in periocular_encodings_list:
+                        peri_dist = cosine(query_periocular_emb, peri_enc)
+                        if peri_dist < min_peri_dist:
+                            min_peri_dist = peri_dist
+
+                    # Compute fusion score with adaptive weighting
+                    fused_dist, face_weight = compute_fusion_score(
+                        min_face_dist,
+                        min_peri_dist,
+                        glasses_detected,
+                        glasses_confidence
+                    )
+                    final_distance = fused_dist
+                    match_method = f'fusion(face:{face_weight:.2f})'
+                    log(f"[recognition_api] {inmate['inmate_id']}: face={min_face_dist:.4f}, peri={min_peri_dist:.4f}, fused={fused_dist:.4f}")
+
+                elif ENABLE_PERIOCULAR_FUSION and glasses_detected and query_periocular_emb is not None:
+                    # Glasses detected but inmate has no periocular encodings
+                    # Boost face distance slightly since glasses may interfere
+                    final_distance = min_face_dist * 0.95  # Slight forgiveness
+                    match_method = 'face_only(glasses_boost)'
+
+                top_3_matches.append((inmate['inmate_id'], final_distance, len(face_encodings_list), match_method))
+
+                if final_distance < best_distance:
+                    best_distance = final_distance
                     best_match = inmate
+                    best_match_method = match_method
             except Exception as e:
                 print(f"[recognition_api] Error comparing with {inmate['inmate_id']}: {e}")
                 continue
 
         # Sort and show top 3 matches for debugging
         top_3_matches.sort(key=lambda x: x[1])
-        log(f"[recognition_api] Top 3 matches (multi-embedding): {[(m[0], f'{m[1]:.4f}', f'{m[2]} enc') for m in top_3_matches[:3]]}")
-        log(f"[recognition_api] Best match: {best_match['inmate_id'] if best_match else 'None'}, distance: {best_distance:.4f}, threshold: {SIMILARITY_THRESHOLD}")
+        log(f"[recognition_api] Top 3 matches: {[(m[0], f'{m[1]:.4f}', m[3]) for m in top_3_matches[:3]]}")
+        log(f"[recognition_api] Best match: {best_match['inmate_id'] if best_match else 'None'}, distance: {best_distance:.4f}, method: {best_match_method}, threshold: {SIMILARITY_THRESHOLD}")
 
         # Check if match is above threshold
         if best_match and best_distance < SIMILARITY_THRESHOLD:
@@ -656,16 +741,22 @@ def _run_recognition(frame, use_detection=True) -> dict:
         return {"error": str(e), "status_code": 500}
 
 
-def _match_single_face(face_crop, inmate_encodings):
+def _match_single_face(face_crop, inmate_encodings, original_frame=None):
     """
     Match a single face crop against inmate database.
+    Supports periocular fusion matching for glasses/occlusion robustness.
     Returns match result dict or None.
+
+    Args:
+        face_crop: Cropped face image (128x128)
+        inmate_encodings: List of (inmate_data, face_encodings, periocular_encodings) tuples
+        original_frame: Original full frame for periocular extraction (optional)
     """
     try:
         # Generate query augmentations for robust matching
         query_augmentations = _generate_query_augmentations(face_crop)
 
-        # Extract embeddings for all augmentations
+        # Extract face embeddings for all augmentations
         query_embeddings = []
         for aug_img in query_augmentations:
             emb = extract_embedding_from_frame(aug_img)
@@ -675,21 +766,58 @@ def _match_single_face(face_crop, inmate_encodings):
         if not query_embeddings:
             return None
 
-        # Find best match using cosine distance
+        # Try to extract periocular embedding
+        query_periocular_emb = None
+        glasses_detected = False
+        glasses_confidence = 0.0
+
+        if ENABLE_PERIOCULAR_FUSION:
+            try:
+                # Use face_crop for periocular (or original_frame if provided)
+                img_for_periocular = original_frame if original_frame is not None else face_crop
+                peri_result = extract_periocular_embedding(img_for_periocular)
+                if peri_result and peri_result.get('embedding'):
+                    query_periocular_emb = np.array(peri_result['embedding'], dtype=np.float32)
+                    glasses_detected = peri_result.get('glasses_detected', False)
+                    glasses_confidence = peri_result.get('glasses_confidence', 0.0)
+            except Exception:
+                pass
+
+        # Find best match using cosine distance with optional periocular fusion
         best_match = None
         best_distance = float('inf')
+        best_match_method = 'face_only'
 
-        for inmate, encodings_list in inmate_encodings:
+        for inmate, face_encodings_list, periocular_encodings_list in inmate_encodings:
             try:
-                min_dist_for_inmate = float('inf')
+                # Compare query embeddings against inmate face embeddings
+                min_face_dist = float('inf')
                 for query_emb in query_embeddings:
-                    for encoding in encodings_list:
+                    for encoding in face_encodings_list:
                         dist = cosine(query_emb, encoding)
-                        if dist < min_dist_for_inmate:
-                            min_dist_for_inmate = dist
+                        if dist < min_face_dist:
+                            min_face_dist = dist
 
-                if min_dist_for_inmate < best_distance:
-                    best_distance = min_dist_for_inmate
+                # Apply periocular fusion if available
+                final_distance = min_face_dist
+
+                if (ENABLE_PERIOCULAR_FUSION and
+                    query_periocular_emb is not None and
+                    periocular_encodings_list):
+
+                    min_peri_dist = float('inf')
+                    for peri_enc in periocular_encodings_list:
+                        peri_dist = cosine(query_periocular_emb, peri_enc)
+                        if peri_dist < min_peri_dist:
+                            min_peri_dist = peri_dist
+
+                    fused_dist, _ = compute_fusion_score(
+                        min_face_dist, min_peri_dist, glasses_detected, glasses_confidence
+                    )
+                    final_distance = fused_dist
+
+                if final_distance < best_distance:
+                    best_distance = final_distance
                     best_match = inmate
             except Exception:
                 continue
@@ -707,7 +835,8 @@ def _match_single_face(face_crop, inmate_encodings):
                     "risk_level": best_match["risk_level"],
                     "crime": best_match["crime"],
                     "confidence": confidence,
-                    "distance": float(round(best_distance, 4))
+                    "distance": float(round(best_distance, 4)),
+                    "glasses_detected": glasses_detected
                 }
 
         return None
@@ -717,9 +846,93 @@ def _match_single_face(face_crop, inmate_encodings):
         return None
 
 
+def _match_face_with_precomputed_embeddings(face_embedding, periocular_embedding, glasses_detected, glasses_confidence, inmate_encodings):
+    """
+    Match a face against the inmate database using pre-computed embeddings.
+    Supports periocular fusion for better accuracy with glasses/occlusion.
+
+    Args:
+        face_embedding: 512-dim face embedding (list or None)
+        periocular_embedding: 512-dim periocular embedding (list or None)
+        glasses_detected: Whether glasses were detected
+        glasses_confidence: Confidence of glasses detection
+        inmate_encodings: List of (inmate_data, face_encodings, periocular_encodings) tuples
+
+    Returns:
+        Match result dict or None
+    """
+    if face_embedding is None:
+        return None
+
+    query_face_emb = np.array(face_embedding, dtype=np.float32)
+    query_peri_emb = np.array(periocular_embedding, dtype=np.float32) if periocular_embedding else None
+
+    best_match = None
+    best_distance = float('inf')
+    match_method = 'face_only'
+
+    for inmate, face_encodings_list, periocular_encodings_list in inmate_encodings:
+        try:
+            # Find minimum face distance
+            min_face_dist = float('inf')
+            for encoding in face_encodings_list:
+                dist = cosine(query_face_emb, encoding)
+                if dist < min_face_dist:
+                    min_face_dist = dist
+
+            # Apply periocular fusion if available
+            final_distance = min_face_dist
+            current_method = 'face_only'
+
+            if (ENABLE_PERIOCULAR_FUSION and
+                query_peri_emb is not None and
+                periocular_encodings_list):
+
+                min_peri_dist = float('inf')
+                for peri_enc in periocular_encodings_list:
+                    peri_dist = cosine(query_peri_emb, peri_enc)
+                    if peri_dist < min_peri_dist:
+                        min_peri_dist = peri_dist
+
+                fused_dist, _ = compute_fusion_score(
+                    min_face_dist, min_peri_dist, glasses_detected, glasses_confidence
+                )
+                final_distance = fused_dist
+                current_method = 'fusion'
+
+            if final_distance < best_distance:
+                best_distance = final_distance
+                best_match = inmate
+                match_method = current_method
+
+        except Exception:
+            continue
+
+    # Check if match is above threshold
+    if best_match and best_distance < SIMILARITY_THRESHOLD:
+        confidence = float(round((1 - best_distance) * 100, 1))
+        if confidence >= MIN_CONFIDENCE:
+            return {
+                "id": best_match["id"],
+                "inmate_id": best_match["inmate_id"],
+                "name": best_match["name"],
+                "status": best_match["status"],
+                "mugshot_path": best_match["mugshot_path"],
+                "risk_level": best_match["risk_level"],
+                "crime": best_match["crime"],
+                "confidence": confidence,
+                "distance": float(round(best_distance, 4)),
+                "glasses_detected": glasses_detected,
+                "match_method": match_method
+            }
+
+    return None
+
+
 def _run_multi_recognition(frame) -> dict:
     """
-    Run recognition pipeline on ALL faces detected in frame.
+    Run recognition pipeline on ALL faces detected in frame using MTCNN.
+    Uses periocular fusion for robust matching with glasses/occlusion.
     Returns a dict with list of all matched persons.
 
     Args:
@@ -729,15 +942,32 @@ def _run_multi_recognition(frame) -> dict:
         return {"error": "No valid image provided", "status_code": 400}
 
     try:
-        # Detect all faces in the image
-        face_data = _detect_all_faces(frame)
+        # Use MTCNN multi-face detection via embedding service
+        log("[multi-face] Calling MTCNN multi-face detection...")
+        detection_result = detect_all_faces(frame)
 
-        if not face_data:
-            # Fallback: try single-face mode
-            log("[multi-face] No faces detected, falling back to single-face mode")
+        if detection_result is None:
+            log("[multi-face] Embedding service unavailable, falling back to Haar Cascade")
+            # Fallback to old Haar Cascade method
+            face_data = _detect_all_faces(frame)
+            if not face_data:
+                log("[multi-face] No faces detected, falling back to single-face mode")
+                return _run_recognition(frame, use_detection=False)
+            # Process with old method (will use _match_single_face)
+            return _run_multi_recognition_legacy(frame, face_data)
+
+        if not detection_result.get('success', False):
+            log(f"[multi-face] Detection failed: {detection_result.get('error', 'Unknown error')}")
             return _run_recognition(frame, use_detection=False)
 
-        log(f"[multi-face] Processing {len(face_data)} detected faces")
+        faces = detection_result.get('faces', [])
+        total_detected = detection_result.get('total_faces', 0)
+
+        if total_detected == 0:
+            log("[multi-face] MTCNN detected no faces, falling back to single-face mode")
+            return _run_recognition(frame, use_detection=False)
+
+        log(f"[multi-face] MTCNN detected {total_detected} faces with embeddings")
 
         # Load cached inmate encodings
         inmate_encodings = _load_inmate_encodings()
@@ -745,20 +975,36 @@ def _run_multi_recognition(frame) -> dict:
         if not inmate_encodings:
             return {"error": "No inmate face encodings in database", "status_code": 500}
 
-        # Process each face
+        # Process each detected face
         matches = []
         unmatched_faces = []
         escaped_inmates = []
 
-        for i, (face_crop, bbox) in enumerate(face_data):
-            log(f"[multi-face] Processing face {i+1}/{len(face_data)}")
+        for face_data in faces:
+            face_idx = face_data.get('face_index', 0)
+            bbox = face_data.get('bbox', {})
+            face_embedding = face_data.get('face_embedding')
+            periocular_embedding = face_data.get('periocular_embedding')
+            glasses_detected = face_data.get('glasses_detected', False)
+            glasses_confidence = face_data.get('glasses_confidence', 0.0)
+            detection_confidence = face_data.get('confidence', 0.0)
 
-            match = _match_single_face(face_crop, inmate_encodings)
+            log(f"[multi-face] Processing face {face_idx}: bbox={bbox}, glasses={glasses_detected}, periocular={'yes' if periocular_embedding else 'no'}")
 
             face_info = {
-                "face_index": i + 1,
-                "bbox": {"x": bbox[0], "y": bbox[1], "width": bbox[2], "height": bbox[3]}
+                "face_index": face_idx,
+                "bbox": bbox,
+                "detection_confidence": detection_confidence
             }
+
+            # Match using pre-computed embeddings with periocular fusion
+            match = _match_face_with_precomputed_embeddings(
+                face_embedding,
+                periocular_embedding,
+                glasses_detected,
+                glasses_confidence,
+                inmate_encodings
+            )
 
             if match:
                 match["face_info"] = face_info
@@ -767,12 +1013,12 @@ def _run_multi_recognition(frame) -> dict:
                 # Track escaped inmates
                 if str(match.get("status", "")).lower() == "escaped":
                     escaped_inmates.append(match)
-                    log(f"[multi-face] Face {i+1}: ESCAPED INMATE - {match['name']} ({match['confidence']}%)")
+                    log(f"[multi-face] Face {face_idx}: ESCAPED INMATE - {match['name']} ({match['confidence']}%) [{match.get('match_method', 'unknown')}]")
                 else:
-                    log(f"[multi-face] Face {i+1}: Match - {match['name']} ({match['confidence']}%)")
+                    log(f"[multi-face] Face {face_idx}: Match - {match['name']} ({match['confidence']}%) [{match.get('match_method', 'unknown')}]")
             else:
                 unmatched_faces.append(face_info)
-                log(f"[multi-face] Face {i+1}: No match")
+                log(f"[multi-face] Face {face_idx}: No match")
 
         # Determine overall status
         if escaped_inmates:
@@ -800,7 +1046,8 @@ def _run_multi_recognition(frame) -> dict:
                     'inmate': escaped,
                     'alert_id': alert.id,
                     'timestamp': datetime.utcnow().isoformat(),
-                    'multi_face_detection': True
+                    'multi_face_detection': True,
+                    'detection_method': 'mtcnn_periocular_fusion'
                 })
             except Exception as e:
                 log(f"[multi-face] Failed to create alert: {e}")
@@ -810,23 +1057,25 @@ def _run_multi_recognition(frame) -> dict:
         if matches:
             try:
                 socketio.emit('multi_face_match', {
-                    'total_faces': len(face_data),
+                    'total_faces': total_detected,
                     'matched_count': len(matches),
                     'escaped_count': len(escaped_inmates),
-                    'matches': [{'name': m['name'], 'confidence': m['confidence']} for m in matches]
+                    'matches': [{'name': m['name'], 'confidence': m['confidence'], 'method': m.get('match_method', 'unknown')} for m in matches],
+                    'detection_method': 'mtcnn_periocular_fusion'
                 })
             except Exception as e:
                 log(f"[multi-face] Socket emit failed: {e}")
 
         return {
             "status": status,
-            "total_faces_detected": len(face_data),
+            "total_faces_detected": total_detected,
             "matched_count": len(matches),
             "unmatched_count": len(unmatched_faces),
             "matches": matches,
             "unmatched_faces": unmatched_faces,
             "has_escaped_inmates": len(escaped_inmates) > 0,
             "escaped_count": len(escaped_inmates),
+            "detection_method": "mtcnn_periocular_fusion",
             "status_code": 200
         }
 
@@ -835,6 +1084,99 @@ def _run_multi_recognition(frame) -> dict:
         import traceback
         traceback.print_exc()
         return {"error": str(e), "status_code": 500}
+
+
+def _run_multi_recognition_legacy(frame, face_data) -> dict:
+    """
+    Legacy multi-face recognition using Haar Cascade detected faces.
+    Used as fallback when embedding service is unavailable.
+    """
+    log(f"[multi-face-legacy] Processing {len(face_data)} detected faces")
+
+    inmate_encodings = _load_inmate_encodings()
+    if not inmate_encodings:
+        return {"error": "No inmate face encodings in database", "status_code": 500}
+
+    matches = []
+    unmatched_faces = []
+    escaped_inmates = []
+
+    for i, (face_crop, bbox) in enumerate(face_data):
+        log(f"[multi-face-legacy] Processing face {i+1}/{len(face_data)}")
+
+        match = _match_single_face(face_crop, inmate_encodings)
+
+        face_info = {
+            "face_index": i + 1,
+            "bbox": {"x": bbox[0], "y": bbox[1], "width": bbox[2], "height": bbox[3]}
+        }
+
+        if match:
+            match["face_info"] = face_info
+            matches.append(match)
+
+            if str(match.get("status", "")).lower() == "escaped":
+                escaped_inmates.append(match)
+                log(f"[multi-face-legacy] Face {i+1}: ESCAPED INMATE - {match['name']} ({match['confidence']}%)")
+            else:
+                log(f"[multi-face-legacy] Face {i+1}: Match - {match['name']} ({match['confidence']}%)")
+        else:
+            unmatched_faces.append(face_info)
+            log(f"[multi-face-legacy] Face {i+1}: No match")
+
+    if escaped_inmates:
+        status = "escaped_inmates_detected"
+    elif matches:
+        status = "matches_found"
+    else:
+        status = "no_matches"
+
+    for escaped in escaped_inmates:
+        try:
+            alert = Alert(
+                message=f"ESCAPED INMATE DETECTED: {escaped['name']} ({escaped['confidence']}% confidence)",
+                level="danger",
+                confidence=escaped['confidence'],
+                inmate_id=escaped["id"],
+                resolved=False
+            )
+            db.session.add(alert)
+            db.session.commit()
+            socketio.emit('escaped_inmate_alarm', {
+                'inmate': escaped,
+                'alert_id': alert.id,
+                'timestamp': datetime.utcnow().isoformat(),
+                'multi_face_detection': True,
+                'detection_method': 'haar_cascade_legacy'
+            })
+        except Exception as e:
+            log(f"[multi-face-legacy] Failed to create alert: {e}")
+            db.session.rollback()
+
+    if matches:
+        try:
+            socketio.emit('multi_face_match', {
+                'total_faces': len(face_data),
+                'matched_count': len(matches),
+                'escaped_count': len(escaped_inmates),
+                'matches': [{'name': m['name'], 'confidence': m['confidence']} for m in matches],
+                'detection_method': 'haar_cascade_legacy'
+            })
+        except Exception as e:
+            log(f"[multi-face-legacy] Socket emit failed: {e}")
+
+    return {
+        "status": status,
+        "total_faces_detected": len(face_data),
+        "matched_count": len(matches),
+        "unmatched_count": len(unmatched_faces),
+        "matches": matches,
+        "unmatched_faces": unmatched_faces,
+        "has_escaped_inmates": len(escaped_inmates) > 0,
+        "escaped_count": len(escaped_inmates),
+        "detection_method": "haar_cascade_legacy",
+        "status_code": 200
+    }
 
 
 @recognition_api_bp.route('/match', methods=['POST'])
