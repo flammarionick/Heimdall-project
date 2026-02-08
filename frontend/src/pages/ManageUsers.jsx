@@ -241,9 +241,7 @@ export default function ManageUsers() {
         {/* Header */}
         <header className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
+            <img src="/logo.png" alt="Heimdall" className="w-10 h-10 object-contain" />
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-gray-800">Heimdall Admin</h1>
               <p className="text-xs md:text-sm text-gray-500">User Management</p>

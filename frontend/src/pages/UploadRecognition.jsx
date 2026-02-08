@@ -446,9 +446,7 @@ export default function UploadRecognition() {
         {/* Header */}
         <header className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
+            <img src="/logo.png" alt="Heimdall" className="w-10 h-10 object-contain" />
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-gray-800">
                 Upload Recognition
@@ -621,15 +619,6 @@ export default function UploadRecognition() {
               </div>
             )}
 
-            <div className="mt-6 p-4 rounded-2xl bg-blue-50 border border-blue-100">
-              <p className="text-sm text-blue-900 font-semibold mb-1">
-                Endpoint used
-              </p>
-              <p className="text-xs text-blue-800">
-                POST <span className="font-mono">/api/recognition/upload</span>{" "}
-                (adjust this only if your Flask route differs)
-              </p>
-            </div>
           </div>
 
           {/* Preview + Results */}
@@ -863,10 +852,6 @@ export default function UploadRecognition() {
               )}
             </div>
 
-            <div className="mt-6 text-xs text-gray-500">
-              Tip: If you see 401s here, your session cookie is not being stored/sent.
-              Keep all API calls relative and ensure Vite proxy forwards to Flask.
-            </div>
           </div>
         </div>
       </div>

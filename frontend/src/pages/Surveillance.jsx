@@ -281,9 +281,7 @@ export default function Surveillance() {
         {/* Header */}
         <header className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-600 flex items-center justify-center shadow-md">
-              <Film className="w-6 h-6 text-white" />
-            </div>
+            <img src="/logo.png" alt="Heimdall" className="w-10 h-10 object-contain" />
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-gray-800">
                 Surveillance Recordings
