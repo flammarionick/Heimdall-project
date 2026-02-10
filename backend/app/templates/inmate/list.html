@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Inmates</h1>
+
+{% if current_user.is_authenticated %}
+<a href="{{ url_for('inmate.register_inmate') }}" class="bg-green-500 text-white px-4 py-2 rounded mb-6 inline-block">Register New Inmate</a>
+{% endif %}
+
+<table class="w-full table-auto border">
+    <thead>
+        <tr class="bg-gray-200">
+            <th class="px-4 py-2">ID</th>
+            <th class="px-4 py-2">Name</th>
+            <th class="px-4 py-2">Status</th>
+            <th class="px-4 py-2">Registered By</th>
+            <th class="px-4 py-2">Sentence End Date</th>
+            <th class="px-4 py-2">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for inmate in inmates %}
+        <tr class="border-t">
+            <td class="px-4 py-2">{{ inmate.id }}</td>
+            <td class="px-4 py-2">{{ inmate.full_name }}</td>
+            <td class="px-4 py-2">{{ inmate.status }}</td>
+            <td class="px-4 py-2">{{ inmate.registered_by.username }}</td>
+            <td class="px-4 py-2">{{ inmate.sentence_end.strftime('%Y-%m-%d') if inmate.sentence_end else 'N/A' }}</td>
+            <td class="px-4 py-2 space-x-2">
+                <a href="{{ url_for('inmate.edit_inmate', inmate_id=inmate.id) }}" class="text-blue-600">Edit</a>
+                {% if inmate.status != 'released' %}
+                <a href="{{ url_for('inmate.release_inmate', inmate_id=inmate.id) }}" class="text-green-600">Mark as Released</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

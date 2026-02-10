@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Edit Inmate</h1>
+
+<form method="POST" enctype="multipart/form-data" class="space-y-4 max-w-lg">
+    <div>
+        <label class="block">Full Name:</label>
+        <input type="text" name="full_name" value="{{ inmate.full_name }}" required class="w-full border px-3 py-2" title="Enter the full name of the inmate" placeholder="Full Name">
+    </div>
+    <div>
+        <label class="block">Prison ID / Reference Number:</label>
+        <input type="text" name="prison_id" value="{{ inmate.prison_id }}" required class="w-full border px-3 py-2" title="Enter the prison ID or reference number" placeholder="Prison ID / Reference Number">
+    </div>
+    <div>
+        <label class="block">Replace Mugshot (optional):</label>
+        <input type="file" name="mugshot" accept="image/*" class="w-full border px-3 py-2" title="Upload a new mugshot">
+    </div>
+    <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded">Update Inmate</button>
+</form>
+{% endblock %}
