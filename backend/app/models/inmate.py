@@ -24,6 +24,11 @@ class Inmate(db.Model):
     face_encodings_json = db.Column(db.Text, nullable=True)  # Multiple embeddings as JSON array
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Periocular recognition fields (eye region embeddings for glasses/occlusion robustness)
+    periocular_encoding = db.Column(db.PickleType, nullable=True)  # Single periocular embedding
+    periocular_encodings_json = db.Column(db.Text, nullable=True)  # Multiple periocular embeddings as JSON
+    has_glasses_in_mugshot = db.Column(db.Boolean, default=False)  # Whether mugshot shows glasses
+
     # Track who registered this inmate
     registered_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     registrant = db.relationship('User', backref='registered_inmates', foreign_keys=[registered_by])
@@ -108,3 +113,48 @@ class Inmate(db.Model):
         """Check if inmate has any face encodings."""
         return self.face_encoding is not None or self.face_encodings_json is not None
 
+    def get_all_periocular_encodings(self):
+        """
+        Get all periocular encodings for this inmate.
+        Returns list of numpy arrays (includes both legacy and multi-embeddings).
+        """
+        encodings = []
+
+        # Add legacy single encoding if exists
+        if self.periocular_encoding is not None:
+            if isinstance(self.periocular_encoding, np.ndarray):
+                encodings.append(self.periocular_encoding)
+            elif isinstance(self.periocular_encoding, list):
+                encodings.append(np.array(self.periocular_encoding))
+
+        # Add multi-embeddings if exists
+        if self.periocular_encodings_json:
+            try:
+                multi_encodings = json.loads(self.periocular_encodings_json)
+                for enc in multi_encodings:
+                    if enc is not None:
+                        encodings.append(np.array(enc))
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+        return encodings
+
+    def set_periocular_encodings(self, encodings_list):
+        """
+        Set multiple periocular encodings for robust matching.
+        Args:
+            encodings_list: List of numpy arrays or lists (512-dim embeddings)
+        """
+        # Convert numpy arrays to lists for JSON serialization
+        json_encodings = []
+        for enc in encodings_list:
+            if enc is not None:
+                if isinstance(enc, np.ndarray):
+                    json_encodings.append(enc.tolist())
+                else:
+                    json_encodings.append(enc)
+        self.periocular_encodings_json = json.dumps(json_encodings)
+
+    def has_periocular_encodings(self):
+        """Check if inmate has any periocular encodings."""
+        return self.periocular_encoding is not None or self.periocular_encodings_json is not None

@@ -27,7 +27,8 @@ import os
 import sys
 
 # Enable/disable periocular fusion matching
-ENABLE_PERIOCULAR_FUSION = True
+# Disabled for now - periocular service has errors and slows down live recognition
+ENABLE_PERIOCULAR_FUSION = False
 
 def log(msg):
     """Log to both stdout and a file for debugging."""
@@ -112,9 +113,10 @@ def create_active_recognition(inmate_id, camera_id, detection_lat, detection_lng
 recognition_api_bp = Blueprint('recognition_api', __name__, url_prefix='/api/recognition')
 
 # Similarity threshold for matching (lower = stricter)
-# FaceNet embeddings are more robust - can use higher threshold
-SIMILARITY_THRESHOLD = 0.45   # Cosine distance threshold for FaceNet (40%+ similarity)
-MIN_CONFIDENCE = 50  # Minimum confidence percentage to show match
+# With aligned ArcFace embeddings, we can use balanced thresholds
+SIMILARITY_THRESHOLD = 0.40   # Cosine distance threshold (60%+ similarity required)
+MIN_CONFIDENCE = 60  # Minimum confidence percentage to show match
+MIN_MARGIN = 0.20  # Best match must be at least 20% better than second-best (strong separation)
 
 # Cache for inmate encodings (loaded once per request cycle)
 _inmate_cache = None
@@ -363,34 +365,20 @@ def _decode_image_from_file_field(req, field_name='frame') -> np.ndarray:
     return img
 
 
-def _generate_query_augmentations(face_crop):
+def _generate_query_augmentations(face_crop, fast_mode=True):
     """
     Generate augmented versions of query image for robust matching.
-    Optimized to prevent memory exhaustion - max ~15 augmentations.
+
+    Args:
+        face_crop: Input face image
+        fast_mode: If True, only generate 2-3 essential augmentations for speed
     """
     augmentations = [face_crop]
     h, w = face_crop.shape[:2]
     center = (w // 2, h // 2)
 
-    # CLAHE normalization (used multiple times below)
+    # CLAHE normalization - always useful for lighting variations
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-
-    # === Essential rotations (reduced from 7 to 3) ===
-    for angle in [-15, 15, 180]:
-        M = cv2.getRotationMatrix2D(center, angle, 1.0)
-        rotated = cv2.warpAffine(face_crop, M, (w, h), borderMode=cv2.BORDER_REPLICATE)
-        augmentations.append(rotated)
-
-    # === Grayscale ===
-    gray = cv2.cvtColor(face_crop, cv2.COLOR_BGR2GRAY)
-    gray_bgr = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-    augmentations.append(gray_bgr)
-
-    # === Exposure corrections ===
-    bright = cv2.convertScaleAbs(face_crop, alpha=1.3, beta=30)
-    augmentations.append(bright)
-
-    # === CLAHE normalization ===
     lab = cv2.cvtColor(face_crop, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
     l = clahe.apply(l)
@@ -398,39 +386,25 @@ def _generate_query_augmentations(face_crop):
     clahe_img = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
     augmentations.append(clahe_img)
 
-    # === Gaussian noise removal (NL means) ===
+    if fast_mode:
+        # Fast mode: Only 2 augmentations (original + CLAHE) for ~500ms response
+        return augmentations
+
+    # Full mode: More augmentations for upload recognition (not time-critical)
+    # === Essential rotations ===
+    for angle in [-15, 15]:
+        M = cv2.getRotationMatrix2D(center, angle, 1.0)
+        rotated = cv2.warpAffine(face_crop, M, (w, h), borderMode=cv2.BORDER_REPLICATE)
+        augmentations.append(rotated)
+
+    # === Brightness correction ===
+    bright = cv2.convertScaleAbs(face_crop, alpha=1.3, beta=30)
+    augmentations.append(bright)
+
+    # === Denoising ===
     try:
         denoised = aggressive_denoise(face_crop)
         augmentations.append(denoised)
-    except Exception:
-        pass
-
-    # === General deblurring ===
-    try:
-        sharpened = strong_deblur(face_crop)
-        augmentations.append(sharpened)
-    except Exception:
-        pass
-
-    # === Salt & pepper noise removal (median filter) ===
-    try:
-        sp_denoised = remove_salt_pepper_noise(face_crop, kernel_size=5)
-        augmentations.append(sp_denoised)
-    except Exception:
-        pass
-
-    # === Motion blur handling (horizontal) ===
-    try:
-        motion_h = deblur_motion_horizontal(face_crop, kernel_size=11)
-        augmentations.append(motion_h)
-    except Exception:
-        pass
-
-    # === Combined: denoised + sharpened (for combined distortions) ===
-    try:
-        combined = aggressive_denoise(face_crop)
-        combined = strong_deblur(combined)
-        augmentations.append(combined)
     except Exception:
         pass
 
@@ -572,8 +546,26 @@ def _run_recognition(frame, use_detection=True) -> dict:
         log(f"[recognition_api] Top 3 matches: {[(m[0], f'{m[1]:.4f}', m[3]) for m in top_3_matches[:3]]}")
         log(f"[recognition_api] Best match: {best_match['inmate_id'] if best_match else 'None'}, distance: {best_distance:.4f}, method: {best_match_method}, threshold: {SIMILARITY_THRESHOLD}")
 
+        # MARGIN CHECK: Best match must be significantly better than second-best
+        # This prevents ambiguous matches where multiple faces have similar scores
+        second_best_distance = top_3_matches[1][1] if len(top_3_matches) > 1 else float('inf')
+        margin = second_best_distance - best_distance
+        log(f"[recognition_api] Margin check: best={best_distance:.4f}, second={second_best_distance:.4f}, margin={margin:.4f}, required={MIN_MARGIN}")
+
         # Check if match is above threshold
         if best_match and best_distance < SIMILARITY_THRESHOLD:
+            # Verify margin is sufficient (best match is clearly better than alternatives)
+            if margin < MIN_MARGIN:
+                log(f"[recognition_api] REJECTED: Margin {margin:.4f} < {MIN_MARGIN} - match not distinctive enough")
+                return {
+                    "status": "ambiguous_match",
+                    "message": f"Potential match rejected - not distinctive enough (margin: {margin:.2%})",
+                    "best_distance": float(round(best_distance, 4)),
+                    "margin": float(round(margin, 4)),
+                    "required_margin": MIN_MARGIN,
+                    "status_code": 200
+                }
+
             confidence = float(round((1 - best_distance) * 100, 1))
 
             # Only show match if confidence is high enough

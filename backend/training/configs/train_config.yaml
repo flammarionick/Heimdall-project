@@ -1,0 +1,99 @@
+# Heimdall Face Recognition Model Training Configuration
+# Target: 97% accuracy across all conditions including noise
+
+model:
+  architecture: "InceptionResnetV1"
+  pretrained: "vggface2"
+  embedding_dim: 512
+  dropout_prob: 0.6
+
+loss:
+  type: "arcface"
+  scale: 64.0
+  margin: 0.5
+  easy_margin: false
+
+training:
+  epochs: 50
+  batch_size: 128  # Reduce to 64 if GPU memory is limited
+  backbone_lr: 1.0e-5  # Lower LR for pretrained backbone
+  head_lr: 1.0e-3      # Higher LR for ArcFace head
+  weight_decay: 5.0e-4
+  gradient_accumulation_steps: 4
+  warmup_epochs: 3
+  val_frequency: 1
+  early_stopping_patience: 10
+
+optimizer:
+  type: "AdamW"
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+
+scheduler:
+  type: "CosineAnnealingWarmRestarts"
+  T_0: 10
+  T_mult: 2
+  eta_min: 1.0e-7
+
+augmentation:
+  # Noise augmentation (CRITICAL for improving 13.3% -> 97%)
+  noise_probability: 0.7
+  gaussian_noise_sigma_range: [10, 50]
+  iso_noise_intensity_range: [0.1, 0.5]
+
+  # Rotation
+  rotation_limit: 45
+  rotation_probability: 0.5
+
+  # Lighting/exposure
+  brightness_limit: 0.3
+  contrast_limit: 0.3
+  gamma_limit: [80, 120]
+  lighting_probability: 0.6
+
+  # Quality degradation
+  jpeg_quality_range: [30, 100]
+  blur_limit: 7
+  downscale_range: [0.5, 0.9]
+  quality_probability: 0.5
+
+  # Occlusion (glasses, hats, masks)
+  coarse_dropout_max_holes: 3
+  coarse_dropout_max_size: 30
+  occlusion_probability: 0.3
+
+  # Grayscale
+  grayscale_probability: 0.2
+
+data:
+  train_dir: "data/processed/train"
+  val_dir: "data/processed/val"
+  test_dir: "data/processed/test"
+  num_workers: 8
+  pin_memory: true
+  min_samples_per_class: 5
+  image_size: 160
+
+hardware:
+  device: "cuda"  # or "cpu"
+  mixed_precision: true
+  compile_model: false  # Set true for PyTorch 2.0+
+  num_gpus: 1
+
+logging:
+  use_wandb: true
+  wandb_project: "heimdall-face-recognition"
+  log_interval: 100
+  save_interval: 1  # Save checkpoint every N epochs
+
+paths:
+  checkpoint_dir: "models/checkpoints"
+  final_model_dir: "models/final"
+  logs_dir: "logs"
+
+# Target metrics
+targets:
+  overall_accuracy: 0.97
+  noise_accuracy: 0.97
+  combined_accuracy: 0.97
+  max_inference_time_ms: 5000

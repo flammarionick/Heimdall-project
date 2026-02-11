@@ -296,28 +296,45 @@ def create_inmate():
             mugshot_path = f"/static/inmate_images/{unique_filename}"
 
             # Extract FaceNet embedding for face recognition
+            periocular_encoding = None
+            has_glasses = False
             try:
                 import cv2
-                from app.utils.embedding_client import extract_embedding_from_frame
+                from app.utils.embedding_client import extract_embedding_from_frame, extract_full_embeddings
 
                 img = cv2.imread(save_path)
                 if img is not None:
-                    # FaceNet works best with 160x160 but embedding service handles resizing
-                    face_encoding = extract_embedding_from_frame(img)
-                    if face_encoding is not None:
-                        print(f"[create_inmate] Successfully extracted FaceNet embedding with {len(face_encoding)} features")
+                    # Try to get both face and periocular embeddings in one call
+                    full_result = extract_full_embeddings(img)
+
+                    if full_result:
+                        face_encoding = full_result.get('face_embedding')
+                        periocular_encoding = full_result.get('periocular_embedding')
+                        has_glasses = full_result.get('glasses_detected', False)
+
+                        if face_encoding:
+                            print(f"[create_inmate] FaceNet face embedding: {len(face_encoding)} features")
+                        if periocular_encoding:
+                            print(f"[create_inmate] Periocular embedding: {len(periocular_encoding)} features")
+                        if has_glasses:
+                            print(f"[create_inmate] Glasses detected in mugshot (confidence: {full_result.get('glasses_confidence', 0):.2f})")
                     else:
-                        print("[create_inmate] Warning: Embedding service returned None. Is it running on port 5001?")
+                        # Fallback to face-only embedding
+                        face_encoding = extract_embedding_from_frame(img)
+                        if face_encoding is not None:
+                            print(f"[create_inmate] FaceNet embedding (face only): {len(face_encoding)} features")
+                        else:
+                            print("[create_inmate] Warning: Embedding service returned None. Is it running on port 5001?")
             except Exception as e:
-                print(f"[create_inmate] Error extracting face encoding: {e}")
+                print(f"[create_inmate] Error extracting embeddings: {e}")
                 import traceback
                 traceback.print_exc()
-                # Continue without face encoding - it can be added later
+                # Continue without encodings - they can be added later
 
     if not mugshot_path:
         return jsonify({"error": "Mugshot image is required"}), 400
 
-    # Create inmate record
+    # Create inmate record with both face and periocular encodings
     inmate = Inmate(
         inmate_id=inmate_id,
         name=name,
@@ -328,6 +345,8 @@ def create_inmate():
         location=location,
         status=status,
         face_encoding=face_encoding,
+        periocular_encoding=periocular_encoding,
+        has_glasses_in_mugshot=has_glasses,
         registered_by=current_user.id,
         created_at=datetime.utcnow(),
         last_seen=datetime.utcnow()

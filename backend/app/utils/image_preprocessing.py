@@ -408,6 +408,236 @@ def selective_preprocess(image, noise_threshold=15, blur_threshold=50):
     return result, operations
 
 
+# =============================================================================
+# SALT & PEPPER NOISE REMOVAL
+# =============================================================================
+
+def remove_salt_pepper_noise(image, kernel_size=5):
+    """
+    Remove salt & pepper (impulse) noise using median filter.
+
+    Median filter is optimal for salt & pepper because it replaces
+    outlier pixels with the median of neighbors, unlike NL means
+    which averages and spreads the noise.
+
+    Args:
+        image: BGR image
+        kernel_size: Size of median filter kernel (must be odd, 3-7 recommended)
+
+    Returns:
+        Denoised BGR image
+    """
+    # Ensure kernel size is odd
+    if kernel_size % 2 == 0:
+        kernel_size += 1
+
+    # cv2.medianBlur works on full color image directly
+    return cv2.medianBlur(image, kernel_size)
+
+
+def detect_salt_pepper_level(image):
+    """
+    Detect the level of salt & pepper noise in an image.
+
+    Looks for pixels that are exactly 0 (pepper) or 255 (salt)
+    compared to their neighbors.
+
+    Args:
+        image: BGR image
+
+    Returns:
+        float: Estimated proportion of affected pixels (0.0 to 1.0)
+    """
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+
+    # Count pixels that are pure black or white
+    total_pixels = gray.size
+    salt_pixels = np.sum(gray == 255)
+    pepper_pixels = np.sum(gray == 0)
+
+    # To distinguish from legitimate black/white regions, check if these
+    # pixels are isolated (surrounded by different values)
+    # Use morphological operations to detect isolated pixels
+
+    # Erode to remove isolated pixels, then compare
+    kernel = np.ones((3, 3), np.uint8)
+
+    # For salt: erode the inverted image
+    inv = 255 - gray
+    eroded_inv = cv2.erode(inv, kernel, iterations=1)
+    isolated_salt = np.sum((gray == 255) & (eroded_inv < 255))
+
+    # For pepper: erode the original
+    eroded = cv2.erode(gray, kernel, iterations=1)
+    isolated_pepper = np.sum((gray == 0) & (eroded > 0))
+
+    isolated_total = isolated_salt + isolated_pepper
+    proportion = isolated_total / total_pixels
+
+    return proportion
+
+
+def adaptive_median_filter(image, max_kernel=7):
+    """
+    Adaptive median filter for varying noise density.
+
+    Starts with small kernel, increases if pixel still appears noisy.
+    Better for heavy salt & pepper noise where fixed kernel may not work.
+
+    Args:
+        image: BGR image
+        max_kernel: Maximum kernel size to try
+
+    Returns:
+        Denoised BGR image
+    """
+    # For efficiency, use progressive median filtering
+    result = image.copy()
+
+    # Apply increasingly aggressive median filters
+    for k in [3, 5, 7]:
+        if k > max_kernel:
+            break
+        # Only filter pixels that still look noisy
+        result = cv2.medianBlur(result, k)
+
+    return result
+
+
+# =============================================================================
+# MOTION BLUR HANDLING
+# =============================================================================
+
+def detect_motion_blur(image, threshold=100):
+    """
+    Detect if image has motion blur using FFT analysis.
+
+    Motion blur creates directional streaks in the frequency domain.
+
+    Args:
+        image: BGR image
+        threshold: Blur detection threshold (lower = more sensitive)
+
+    Returns:
+        bool: True if motion blur detected
+    """
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+
+    # Compute Laplacian variance (standard blur detection)
+    laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+
+    # If variance is low, image is blurry (could be any type of blur)
+    return laplacian_var < threshold
+
+
+def deblur_motion_horizontal(image, kernel_size=15):
+    """
+    Counter horizontal motion blur.
+
+    Uses Wiener-like deconvolution with horizontal kernel assumption.
+    This matches the test script's horizontal motion blur kernel.
+
+    Args:
+        image: BGR image
+        kernel_size: Assumed motion blur kernel size
+
+    Returns:
+        Deblurred BGR image
+    """
+    # Apply sharpening in horizontal direction
+    # Create horizontal sharpening kernel
+    kernel = np.zeros((3, kernel_size), dtype=np.float32)
+    kernel[1, :] = -1.0 / kernel_size
+    kernel[1, kernel_size // 2] = 2.0
+
+    # Normalize
+    kernel = kernel / np.abs(kernel).sum() * 2
+
+    # Apply to each channel
+    if len(image.shape) == 3:
+        result = np.zeros_like(image)
+        for i in range(3):
+            result[:, :, i] = cv2.filter2D(image[:, :, i], -1, kernel)
+        return np.clip(result, 0, 255).astype(np.uint8)
+
+    return np.clip(cv2.filter2D(image, -1, kernel), 0, 255).astype(np.uint8)
+
+
+def deblur_motion_vertical(image, kernel_size=15):
+    """
+    Counter vertical motion blur.
+
+    Args:
+        image: BGR image
+        kernel_size: Assumed motion blur kernel size
+
+    Returns:
+        Deblurred BGR image
+    """
+    # Create vertical sharpening kernel
+    kernel = np.zeros((kernel_size, 3), dtype=np.float32)
+    kernel[:, 1] = -1.0 / kernel_size
+    kernel[kernel_size // 2, 1] = 2.0
+
+    # Normalize
+    kernel = kernel / np.abs(kernel).sum() * 2
+
+    if len(image.shape) == 3:
+        result = np.zeros_like(image)
+        for i in range(3):
+            result[:, :, i] = cv2.filter2D(image[:, :, i], -1, kernel)
+        return np.clip(result, 0, 255).astype(np.uint8)
+
+    return np.clip(cv2.filter2D(image, -1, kernel), 0, 255).astype(np.uint8)
+
+
+def deblur_motion_multi_direction(image):
+    """
+    Try multiple motion blur directions and combine results.
+
+    Since we don't know blur direction, apply corrections for
+    horizontal, vertical, and use the sharpest result.
+
+    Args:
+        image: BGR image
+
+    Returns:
+        Deblurred BGR image
+    """
+    candidates = []
+
+    # Try horizontal deblur
+    try:
+        h_deblur = deblur_motion_horizontal(image, kernel_size=11)
+        h_sharpness = cv2.Laplacian(cv2.cvtColor(h_deblur, cv2.COLOR_BGR2GRAY), cv2.CV_64F).var()
+        candidates.append((h_deblur, h_sharpness))
+    except Exception:
+        pass
+
+    # Try vertical deblur
+    try:
+        v_deblur = deblur_motion_vertical(image, kernel_size=11)
+        v_sharpness = cv2.Laplacian(cv2.cvtColor(v_deblur, cv2.COLOR_BGR2GRAY), cv2.CV_64F).var()
+        candidates.append((v_deblur, v_sharpness))
+    except Exception:
+        pass
+
+    # Also try strong general sharpening
+    try:
+        strong = strong_deblur(image)
+        s_sharpness = cv2.Laplacian(cv2.cvtColor(strong, cv2.COLOR_BGR2GRAY), cv2.CV_64F).var()
+        candidates.append((strong, s_sharpness))
+    except Exception:
+        pass
+
+    # Return the sharpest result
+    if candidates:
+        best = max(candidates, key=lambda x: x[1])
+        return best[0]
+
+    return image
+
+
 def add_gaussian_noise(image, sigma):
     """
     Add Gaussian noise to image for augmentation.

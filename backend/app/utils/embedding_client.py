@@ -11,7 +11,8 @@ from typing import Optional, Dict, Tuple, List
 
 # Base URL for embedding service
 EMBEDDING_SERVICE_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://127.0.0.1:5001")
-EMBEDDING_URL = os.getenv("EMBEDDING_URL", f"{EMBEDDING_SERVICE_URL}/encode")
+# Use aligned embeddings by default for better accuracy
+EMBEDDING_URL = os.getenv("EMBEDDING_URL", f"{EMBEDDING_SERVICE_URL}/encode?align=true")
 PERIOCULAR_URL = f"{EMBEDDING_SERVICE_URL}/encode_periocular"
 FULL_ENCODE_URL = f"{EMBEDDING_SERVICE_URL}/encode_full"
 GLASSES_DETECT_URL = f"{EMBEDDING_SERVICE_URL}/detect_glasses"
