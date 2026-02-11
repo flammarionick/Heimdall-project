@@ -1,0 +1,3133 @@
+{
+  "test_date": "2026-01-30 17:15:56",
+  "config": {
+    "similarity_threshold": 0.45,
+    "breaking_point_threshold": 70,
+    "random_seed": 42
+  },
+  "total_inmates": 105,
+  "total_tests": 1500,
+  "correct_matches": 665,
+  "wrong_matches": 205,
+  "no_matches": 630,
+  "per_distortion": {
+    "original": {
+      "correct": 105,
+      "wrong": 0,
+      "no_match": 0,
+      "total": 105,
+      "accuracy": 100.0,
+      "mean_distance": 0.0,
+      "mean_confidence": 100.0
+    },
+    "rotation_30": {
+      "correct": 105,
+      "wrong": 0,
+      "no_match": 0,
+      "total": 105,
+      "accuracy": 100.0,
+      "mean_distance": 0.0038,
+      "mean_confidence": 99.62
+    },
+    "dark": {
+      "correct": 104,
+      "wrong": 1,
+      "no_match": 0,
+      "total": 105,
+      "accuracy": 99.05,
+      "mean_distance": 0.0802,
+      "mean_confidence": 92.22
+    },
+    "blur_11": {
+      "correct": 97,
+      "wrong": 6,
+      "no_match": 2,
+      "total": 105,
+      "accuracy": 92.38,
+      "mean_distance": 0.1695,
+      "mean_confidence": 84.84
+    },
+    "noise_30": {
+      "correct": 14,
+      "wrong": 91,
+      "no_match": 0,
+      "total": 105,
+      "accuracy": 13.33,
+      "mean_distance": 0.0478,
+      "mean_confidence": 93.19
+    },
+    "resolution_48": {
+      "correct": 103,
+      "wrong": 0,
+      "no_match": 2,
+      "total": 105,
+      "accuracy": 98.1,
+      "mean_distance": 0.0684,
+      "mean_confidence": 94.02
+    },
+    "grayscale": {
+      "correct": 105,
+      "wrong": 0,
+      "no_match": 0,
+      "total": 105,
+      "accuracy": 100.0,
+      "mean_distance": 0.0,
+      "mean_confidence": 100.0
+    },
+    "combined": {
+      "correct": 16,
+      "wrong": 89,
+      "no_match": 0,
+      "total": 105,
+      "accuracy": 15.24,
+      "mean_distance": 0.0545,
+      "mean_confidence": 93.53
+    }
+  },
+  "failed_tests": [
+    {
+      "inmate_id": "AA-9E4092",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "AA-9E4092",
+      "matched": "JK-DC562E",
+      "distance": 0.029478310223407744,
+      "confidence": 97.05216897765922,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\AA-9E4092_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "AA-9E4092",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "AA-9E4092",
+      "matched": "TR-D9A106",
+      "distance": 0.04697963269783567,
+      "confidence": 95.30203673021643,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\AA-9E4092_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "ABV-9DC55F",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "ABV-9DC55F",
+      "matched": "CD-83BB76",
+      "distance": 0.02759448252306429,
+      "confidence": 97.24055174769357,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\ABV-9DC55F_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "ABV-9DC55F",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "ABV-9DC55F",
+      "matched": "MW-7A9AE4",
+      "distance": 0.015606627847553511,
+      "confidence": 98.43933721524465,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\ABV-9DC55F_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "AF-DF4155",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "AF-DF4155",
+      "matched": "FF-40CAF0",
+      "distance": 0.023894543356170472,
+      "confidence": 97.61054566438295,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\AF-DF4155_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "AF-DF4155",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "AF-DF4155",
+      "matched": "CG-554403",
+      "distance": 0.02625217313482342,
+      "confidence": 97.37478268651766,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\AF-DF4155_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "AL-A91337",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "AL-A91337",
+      "matched": "EM-8BB98E",
+      "distance": 0.029472284452764286,
+      "confidence": 97.05277155472358,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\AL-A91337_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "AM-AC297B",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "AM-AC297B",
+      "matched": "JK-DC562E",
+      "distance": 0.027024825394753482,
+      "confidence": 97.29751746052465,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\AM-AC297B_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "AM-AC297B",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "AM-AC297B",
+      "matched": "JK-DC562E",
+      "distance": 0.028017433868920416,
+      "confidence": 97.19825661310796,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\AM-AC297B_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "ASC-0F6ECB",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "ASC-0F6ECB",
+      "matched": "MA-1D505E",
+      "distance": 0.05589980406285433,
+      "confidence": 94.41001959371457,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\ASC-0F6ECB_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "BB-19DFA3",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "BB-19DFA3",
+      "matched": "HE-81D026",
+      "distance": 0.05117258273757763,
+      "confidence": 94.88274172624223,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\BB-19DFA3_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "BB-19DFA3",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "BB-19DFA3",
+      "matched": "DK-412E9A",
+      "distance": 0.10074299487668648,
+      "confidence": 89.92570051233135,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\BB-19DFA3_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "BB-DFBBFB",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "BB-DFBBFB",
+      "matched": "CC-D0AB89",
+      "distance": 0.027264114139013418,
+      "confidence": 97.27358858609865,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\BB-DFBBFB_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "BB-DFBBFB",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "BB-DFBBFB",
+      "matched": "AM-AC297B",
+      "distance": 0.05279151119957437,
+      "confidence": 94.72084888004257,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\BB-DFBBFB_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "BC-67BB74",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "BC-67BB74",
+      "matched": "RR-CFE5EC",
+      "distance": 0.030348139172233557,
+      "confidence": 96.96518608277664,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\BC-67BB74_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "BC-67BB74",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "BC-67BB74",
+      "matched": "CC-D0AB89",
+      "distance": 0.02271870620510419,
+      "confidence": 97.72812937948959,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\BC-67BB74_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "BN-347434",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "BN-347434",
+      "matched": "AA-9E4092",
+      "distance": 0.05781740336802732,
+      "confidence": 94.21825966319727,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\BN-347434_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "BN-347434",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "BN-347434",
+      "matched": "RM-974853",
+      "distance": 0.018787787439107473,
+      "confidence": 98.12122125608926,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\BN-347434_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "CB-713362",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "CB-713362",
+      "matched": "MS-6857A7",
+      "distance": 0.03717851483467427,
+      "confidence": 96.28214851653257,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CB-713362_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "CB-713362",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "CB-713362",
+      "matched": "MW-7A9AE4",
+      "distance": 0.038754331479780024,
+      "confidence": 96.124566852022,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CB-713362_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "CB-A01BB6",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "CB-A01BB6",
+      "matched": "SL-EA0262",
+      "distance": 0.024110863657186177,
+      "confidence": 97.58891363428138,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CB-A01BB6_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "CB-A01BB6",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "CB-A01BB6",
+      "matched": "RSH-A2F8C2",
+      "distance": 0.07307184742467288,
+      "confidence": 92.69281525753271,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CB-A01BB6_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "CC-D0AB89",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "CC-D0AB89",
+      "matched": "RD-F64315",
+      "distance": 0.028792188364095805,
+      "confidence": 97.12078116359042,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CC-D0AB89_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "CC-D0AB89",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "CC-D0AB89",
+      "matched": "JK-DC562E",
+      "distance": 0.017648798456330828,
+      "confidence": 98.23512015436691,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CC-D0AB89_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "CD-83BB76",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "CD-83BB76",
+      "matched": "KS-157060",
+      "distance": 0.025178413242769593,
+      "confidence": 97.48215867572304,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CD-83BB76_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "CD-83BB76",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "CD-83BB76",
+      "matched": "JT-92F16F",
+      "distance": 0.06004168907677254,
+      "confidence": 93.99583109232275,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CD-83BB76_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "CDJ-713551",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "CDJ-713551",
+      "matched": "JS-A5A10E",
+      "distance": 0.05415816803981832,
+      "confidence": 94.58418319601817,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CDJ-713551_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "CDJ-713551",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "CDJ-713551",
+      "matched": "MA-1D505E",
+      "distance": 0.045971241873827506,
+      "confidence": 95.40287581261725,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CDJ-713551_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "CG-554403",
+      "distortion": "dark",
+      "result": "wrong_match",
+      "expected": "CG-554403",
+      "matched": "MP-C92531",
+      "distance": 0.3253428488942197,
+      "confidence": 67.46571511057803,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CG-554403_dark_wrong.jpg"
+    },
+    {
+      "inmate_id": "CG-554403",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "CG-554403",
+      "matched": "RR-CFE5EC",
+      "distance": 0.024387622309592794,
+      "confidence": 97.56123776904072,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CG-554403_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "CG-554403",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "CG-554403",
+      "matched": "JC-C4CC03",
+      "distance": 0.02632808125349695,
+      "confidence": 97.3671918746503,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CG-554403_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "CG-C5E48B",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "CG-C5E48B",
+      "matched": "JT-92F16F",
+      "distance": 0.032193772813054355,
+      "confidence": 96.78062271869456,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CG-C5E48B_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "CG-C5E48B",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "CG-C5E48B",
+      "matched": "JT-92F16F",
+      "distance": 0.03562294519040665,
+      "confidence": 96.43770548095934,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CG-C5E48B_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "CR-F705B7",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "CR-F705B7",
+      "matched": "WM-D266FC",
+      "distance": 0.0590924441493057,
+      "confidence": 94.09075558506943,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CR-F705B7_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "CR-F705B7",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "CR-F705B7",
+      "matched": "MS-6857A7",
+      "distance": 0.1341481125982652,
+      "confidence": 86.58518874017348,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CR-F705B7_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "CS-D76876",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "CS-D76876",
+      "matched": "DW-C69E52",
+      "distance": 0.06741973551140112,
+      "confidence": 93.2580264488599,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CS-D76876_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "DI-0408C3",
+      "distortion": "blur_11",
+      "result": "wrong_match",
+      "expected": "DI-0408C3",
+      "matched": "JC-85E7A8",
+      "distance": 0.39620593969674467,
+      "confidence": 60.37940603032553,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\DI-0408C3_blur_11_wrong.jpg"
+    },
+    {
+      "inmate_id": "DI-0408C3",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "DI-0408C3",
+      "matched": "JS-A5A10E",
+      "distance": 0.05188081352240126,
+      "confidence": 94.81191864775987,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\DI-0408C3_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "DI-0408C3",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "DI-0408C3",
+      "matched": "CB-713362",
+      "distance": 0.05309890911120829,
+      "confidence": 94.69010908887917,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\DI-0408C3_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "DJ-9AC0A7",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "DJ-9AC0A7",
+      "matched": "MM-E19227",
+      "distance": 0.09117546889457029,
+      "confidence": 90.88245311054297,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\DJ-9AC0A7_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "DK-412E9A",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "DK-412E9A",
+      "matched": "JC-9BE591",
+      "distance": 0.04464622529803963,
+      "confidence": 95.53537747019604,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\DK-412E9A_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "DK-412E9A",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "DK-412E9A",
+      "matched": "NP-56A3DA",
+      "distance": 0.05274765722990993,
+      "confidence": 94.72523427700901,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\DK-412E9A_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "DR-656A3D",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "DR-656A3D",
+      "matched": "EM-8BB98E",
+      "distance": 0.13717376241119816,
+      "confidence": 86.28262375888018,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\DR-656A3D_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "DS-359538",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "DS-359538",
+      "matched": "PA-A64654",
+      "distance": 0.03679886729676296,
+      "confidence": 96.3201132703237,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\DS-359538_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "DS-359538",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "DS-359538",
+      "matched": "SM-6C4B84",
+      "distance": 0.03851381666863951,
+      "confidence": 96.14861833313604,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\DS-359538_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "DW-C69E52",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "DW-C69E52",
+      "matched": "JA-970267",
+      "distance": 0.037976194900920524,
+      "confidence": 96.20238050990795,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\DW-C69E52_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "DW-C69E52",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "DW-C69E52",
+      "matched": "JC-9BE591",
+      "distance": 0.03618176430182585,
+      "confidence": 96.38182356981741,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\DW-C69E52_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "ED-089169",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "ED-089169",
+      "matched": "NC-535F91",
+      "distance": 0.11586099970223351,
+      "confidence": 88.41390002977664,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\ED-089169_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "ED-089169",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "ED-089169",
+      "matched": "LD-1FDAAF",
+      "distance": 0.06112225115513048,
+      "confidence": 93.88777488448696,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\ED-089169_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "EE-927E75",
+      "distortion": "blur_11",
+      "result": "wrong_match",
+      "expected": "EE-927E75",
+      "matched": "WM-D266FC",
+      "distance": 0.3445323453202831,
+      "confidence": 65.5467654679717,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\EE-927E75_blur_11_wrong.jpg"
+    },
+    {
+      "inmate_id": "EE-927E75",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "EE-927E75",
+      "matched": "ABV-9DC55F",
+      "distance": 0.030868602118973576,
+      "confidence": 96.91313978810264,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\EE-927E75_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "EE-927E75",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "EE-927E75",
+      "matched": "CG-C5E48B",
+      "distance": 0.06656967427336402,
+      "confidence": 93.3430325726636,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\EE-927E75_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "EM-8BB98E",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "EM-8BB98E",
+      "matched": "MP-C92531",
+      "distance": 0.05005812696152723,
+      "confidence": 94.99418730384728,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\EM-8BB98E_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "ES-5A2708",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "ES-5A2708",
+      "matched": "CB-713362",
+      "distance": 0.032701516457251834,
+      "confidence": 96.72984835427482,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\ES-5A2708_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "ES-5A2708",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "ES-5A2708",
+      "matched": "BC-67BB74",
+      "distance": 0.03786746869021218,
+      "confidence": 96.21325313097879,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\ES-5A2708_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "EZ-77E59A",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "EZ-77E59A",
+      "matched": "FV-10BD66",
+      "distance": 0.08186655445786728,
+      "confidence": 91.81334455421327,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\EZ-77E59A_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "FF-40CAF0",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "FF-40CAF0",
+      "matched": "HE-81D026",
+      "distance": 0.04446541730528197,
+      "confidence": 95.5534582694718,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\FF-40CAF0_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "FV-10BD66",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "FV-10BD66",
+      "matched": "BC-67BB74",
+      "distance": 0.021892357930489936,
+      "confidence": 97.810764206951,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\FV-10BD66_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "FV-10BD66",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "FV-10BD66",
+      "matched": "NP-56A3DA",
+      "distance": 0.053102496077657824,
+      "confidence": 94.68975039223422,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\FV-10BD66_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "GH-8598EA",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "GH-8598EA",
+      "matched": "LR-CFA100",
+      "distance": 0.04501766190198442,
+      "confidence": 95.49823380980156,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\GH-8598EA_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "GH-8598EA",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "GH-8598EA",
+      "matched": "MC-A3211D",
+      "distance": 0.09117933758400332,
+      "confidence": 90.88206624159967,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\GH-8598EA_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "GP-6A73E5",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "GP-6A73E5",
+      "matched": "CDJ-713551",
+      "distance": 0.016937001850653388,
+      "confidence": 98.30629981493466,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\GP-6A73E5_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "GP-6A73E5",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "GP-6A73E5",
+      "matched": "DW-C69E52",
+      "distance": 0.03983299974557408,
+      "confidence": 96.01670002544259,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\GP-6A73E5_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "HE-81D026",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "HE-81D026",
+      "matched": "JK-DC562E",
+      "distance": 0.024915543762313086,
+      "confidence": 97.5084456237687,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\HE-81D026_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "HE-81D026",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "HE-81D026",
+      "matched": "JK-DC562E",
+      "distance": 0.018643961480818927,
+      "confidence": 98.1356038519181,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\HE-81D026_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "HS-1F1DD9",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "HS-1F1DD9",
+      "matched": "FF-40CAF0",
+      "distance": 0.12519237133247674,
+      "confidence": 87.48076286675233,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\HS-1F1DD9_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "HS-1F1DD9",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "HS-1F1DD9",
+      "matched": "JT-92F16F",
+      "distance": 0.1260731435325375,
+      "confidence": 87.39268564674624,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\HS-1F1DD9_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "inmate",
+      "distortion": "resolution_48",
+      "result": "no_match",
+      "distance": 0.45142562853218904,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\inmate_resolution_48_nomatch.jpg"
+    },
+    {
+      "inmate_id": "JA-970267",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JA-970267",
+      "matched": "KB-55A91E",
+      "distance": 0.016657429106418653,
+      "confidence": 98.33425708935813,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JA-970267_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JA-970267",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JA-970267",
+      "matched": "DW-C69E52",
+      "distance": 0.03679525499154179,
+      "confidence": 96.32047450084582,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JA-970267_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JB-A76DFC",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JB-A76DFC",
+      "matched": "TM-11FD85",
+      "distance": 0.03274500131245661,
+      "confidence": 96.72549986875434,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JB-A76DFC_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JB-A76DFC",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JB-A76DFC",
+      "matched": "FV-10BD66",
+      "distance": 0.04496257457771202,
+      "confidence": 95.50374254222879,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JB-A76DFC_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JC-19BB85",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JC-19BB85",
+      "matched": "DI-0408C3",
+      "distance": 0.030551206724376723,
+      "confidence": 96.94487932756233,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JC-19BB85_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JC-19BB85",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JC-19BB85",
+      "matched": "CG-C5E48B",
+      "distance": 0.052628914450039366,
+      "confidence": 94.73710855499607,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JC-19BB85_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JC-85E7A8",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JC-85E7A8",
+      "matched": "CG-C5E48B",
+      "distance": 0.028229884788957493,
+      "confidence": 97.17701152110425,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JC-85E7A8_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JC-8DB340",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JC-8DB340",
+      "matched": "TM-11FD85",
+      "distance": 0.02267930683233288,
+      "confidence": 97.73206931676671,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JC-8DB340_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JC-8DB340",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JC-8DB340",
+      "matched": "KC-BABB0A",
+      "distance": 0.038220111658434086,
+      "confidence": 96.1779888341566,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JC-8DB340_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JC-9BE591",
+      "distortion": "blur_11",
+      "result": "no_match",
+      "distance": 0.4612651848841638,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JC-9BE591_blur_11_nomatch.jpg"
+    },
+    {
+      "inmate_id": "JC-9BE591",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JC-9BE591",
+      "matched": "RD-F64315",
+      "distance": 0.018167336354677155,
+      "confidence": 98.18326636453229,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JC-9BE591_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JC-9BE591",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JC-9BE591",
+      "matched": "RS-636DF4",
+      "distance": 0.042116286992131435,
+      "confidence": 95.78837130078685,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JC-9BE591_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JC-C4CC03",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JC-C4CC03",
+      "matched": "PE-442F2C",
+      "distance": 0.018323132689212707,
+      "confidence": 98.16768673107873,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JC-C4CC03_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JC-C4CC03",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JC-C4CC03",
+      "matched": "JK-DC562E",
+      "distance": 0.023604092613613292,
+      "confidence": 97.63959073863867,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JC-C4CC03_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JC-D2983C",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JC-D2983C",
+      "matched": "JC-85E7A8",
+      "distance": 0.06820743064745394,
+      "confidence": 93.1792569352546,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JC-D2983C_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JC-D2983C",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JC-D2983C",
+      "matched": "PA-A64654",
+      "distance": 0.075253572243006,
+      "confidence": 92.4746427756994,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JC-D2983C_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JG-AD5984",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JG-AD5984",
+      "matched": "CB-713362",
+      "distance": 0.04364766817976029,
+      "confidence": 95.63523318202397,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JG-AD5984_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JG-AD5984",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JG-AD5984",
+      "matched": "JC-19BB85",
+      "distance": 0.020384947458644276,
+      "confidence": 97.96150525413557,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JG-AD5984_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JH-FE4FB4",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JH-FE4FB4",
+      "matched": "BN-347434",
+      "distance": 0.08413416731842871,
+      "confidence": 91.58658326815713,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JH-FE4FB4_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JK-DC562E",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JK-DC562E",
+      "matched": "CD-83BB76",
+      "distance": 0.03281213215787726,
+      "confidence": 96.71878678421227,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JK-DC562E_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JK-DC562E",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JK-DC562E",
+      "matched": "JS-16BD3B",
+      "distance": 0.03979318394003262,
+      "confidence": 96.02068160599674,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JK-DC562E_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JN-D32DE5",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JN-D32DE5",
+      "matched": "KC-BABB0A",
+      "distance": 0.050241146758675415,
+      "confidence": 94.97588532413246,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JN-D32DE5_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JN-D32DE5",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JN-D32DE5",
+      "matched": "JG-AD5984",
+      "distance": 0.06684914908113304,
+      "confidence": 93.3150850918867,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JN-D32DE5_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JP-3CCAD3",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JP-3CCAD3",
+      "matched": "RD-F64315",
+      "distance": 0.1649536867908078,
+      "confidence": 83.50463132091922,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JP-3CCAD3_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JP-3CCAD3",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JP-3CCAD3",
+      "matched": "CG-C5E48B",
+      "distance": 0.041158227008722736,
+      "confidence": 95.88417729912773,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JP-3CCAD3_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JS-16BD3B",
+      "distortion": "blur_11",
+      "result": "wrong_match",
+      "expected": "JS-16BD3B",
+      "matched": "EE-927E75",
+      "distance": 0.41707470949702097,
+      "confidence": 58.2925290502979,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JS-16BD3B_blur_11_wrong.jpg"
+    },
+    {
+      "inmate_id": "JS-16BD3B",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JS-16BD3B",
+      "matched": "JA-970267",
+      "distance": 0.025004283429947538,
+      "confidence": 97.49957165700525,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JS-16BD3B_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JS-16BD3B",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JS-16BD3B",
+      "matched": "CB-713362",
+      "distance": 0.02341081400711731,
+      "confidence": 97.65891859928827,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JS-16BD3B_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JS-A5A10E",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JS-A5A10E",
+      "matched": "MM-E19227",
+      "distance": 0.02259281085248599,
+      "confidence": 97.7407189147514,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JS-A5A10E_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JT-92F16F",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JT-92F16F",
+      "matched": "MS-6857A7",
+      "distance": 0.025091309806341777,
+      "confidence": 97.49086901936582,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JT-92F16F_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JT-92F16F",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JT-92F16F",
+      "matched": "EM-8BB98E",
+      "distance": 0.047685143889062864,
+      "confidence": 95.23148561109372,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JT-92F16F_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "JVF-E55365",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "JVF-E55365",
+      "matched": "RL-3CDFE4",
+      "distance": 0.02505892115115438,
+      "confidence": 97.49410788488456,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JVF-E55365_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "JVF-E55365",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "JVF-E55365",
+      "matched": "SL-EA0262",
+      "distance": 0.05602003395008792,
+      "confidence": 94.3979966049912,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\JVF-E55365_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "KB-55A91E",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "KB-55A91E",
+      "matched": "KC-BABB0A",
+      "distance": 0.022412638230442705,
+      "confidence": 97.75873617695574,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\KB-55A91E_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "KC-BABB0A",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "KC-BABB0A",
+      "matched": "HE-81D026",
+      "distance": 0.013922993705448472,
+      "confidence": 98.60770062945515,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\KC-BABB0A_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "KC-BABB0A",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "KC-BABB0A",
+      "matched": "CS-D76876",
+      "distance": 0.013929877317058414,
+      "confidence": 98.60701226829416,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\KC-BABB0A_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "KS-157060",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "KS-157060",
+      "matched": "JA-970267",
+      "distance": 0.04669271172619904,
+      "confidence": 95.3307288273801,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\KS-157060_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "KS-157060",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "KS-157060",
+      "matched": "KB-55A91E",
+      "distance": 0.17369450608068304,
+      "confidence": 82.6305493919317,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\KS-157060_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "KV-95D847",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "KV-95D847",
+      "matched": "RR-CFE5EC",
+      "distance": 0.023253036563274487,
+      "confidence": 97.67469634367255,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\KV-95D847_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "KV-95D847",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "KV-95D847",
+      "matched": "SM-6C4B84",
+      "distance": 0.05179919764723517,
+      "confidence": 94.82008023527648,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\KV-95D847_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "KY-1BC1AE",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "KY-1BC1AE",
+      "matched": "ASC-0F6ECB",
+      "distance": 0.06273232430421316,
+      "confidence": 93.72676756957868,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\KY-1BC1AE_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "KY-1BC1AE",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "KY-1BC1AE",
+      "matched": "RD-F64315",
+      "distance": 0.029040789196630223,
+      "confidence": 97.09592108033698,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\KY-1BC1AE_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "LD-1FDAAF",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "LD-1FDAAF",
+      "matched": "RG-FD2D2F",
+      "distance": 0.0846935418401018,
+      "confidence": 91.53064581598981,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\LD-1FDAAF_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "LH-38DBD8",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "LH-38DBD8",
+      "matched": "KV-95D847",
+      "distance": 0.12499700074945752,
+      "confidence": 87.50029992505425,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\LH-38DBD8_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "LH-38DBD8",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "LH-38DBD8",
+      "matched": "JC-9BE591",
+      "distance": 0.14146230311518548,
+      "confidence": 85.85376968848145,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\LH-38DBD8_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "LR-CFA100",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "LR-CFA100",
+      "matched": "NP-56A3DA",
+      "distance": 0.036162591130856736,
+      "confidence": 96.38374088691432,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\LR-CFA100_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "LR-CFA100",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "LR-CFA100",
+      "matched": "DS-359538",
+      "distance": 0.04245908570774659,
+      "confidence": 95.75409142922534,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\LR-CFA100_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "MA-1D505E",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "MA-1D505E",
+      "matched": "PA-A64654",
+      "distance": 0.024135209662239587,
+      "confidence": 97.58647903377604,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MA-1D505E_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "MA-1D505E",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "MA-1D505E",
+      "matched": "JE-FA02E1",
+      "distance": 0.044990375589958664,
+      "confidence": 95.50096244100413,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MA-1D505E_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "MC-A3211D",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "MC-A3211D",
+      "matched": "JC-19BB85",
+      "distance": 0.21879216191363993,
+      "confidence": 78.120783808636,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MC-A3211D_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "MC-A3211D",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "MC-A3211D",
+      "matched": "JA-970267",
+      "distance": 0.12336157982596707,
+      "confidence": 87.6638420174033,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MC-A3211D_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "MH-B6BA66",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "MH-B6BA66",
+      "matched": "PE-502FDA",
+      "distance": 0.011944211814720385,
+      "confidence": 98.80557881852796,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MH-B6BA66_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "MH-B6BA66",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "MH-B6BA66",
+      "matched": "RG-FD2D2F",
+      "distance": 0.03334767530891791,
+      "confidence": 96.6652324691082,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MH-B6BA66_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "MK-6A99EE",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "MK-6A99EE",
+      "matched": "SM-6C4B84",
+      "distance": 0.048525330190442806,
+      "confidence": 95.14746698095571,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MK-6A99EE_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "MK-6A99EE",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "MK-6A99EE",
+      "matched": "CB-A01BB6",
+      "distance": 0.06657803041686827,
+      "confidence": 93.34219695831317,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MK-6A99EE_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "MM-E19227",
+      "distortion": "blur_11",
+      "result": "wrong_match",
+      "expected": "MM-E19227",
+      "matched": "ED-089169",
+      "distance": 0.3489950994518568,
+      "confidence": 65.10049005481432,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MM-E19227_blur_11_wrong.jpg"
+    },
+    {
+      "inmate_id": "MM-E19227",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "MM-E19227",
+      "matched": "FF-40CAF0",
+      "distance": 0.03024726805594824,
+      "confidence": 96.97527319440518,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MM-E19227_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "MP-C92531",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "MP-C92531",
+      "matched": "CG-554403",
+      "distance": 0.060474355611028874,
+      "confidence": 93.95256443889711,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MP-C92531_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "MP-C92531",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "MP-C92531",
+      "matched": "CB-713362",
+      "distance": 0.056848115682054945,
+      "confidence": 94.31518843179451,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MP-C92531_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "MS-6857A7",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "MS-6857A7",
+      "matched": "SM-6C4B84",
+      "distance": 0.08506002481596675,
+      "confidence": 91.49399751840332,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MS-6857A7_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "MS-6857A7",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "MS-6857A7",
+      "matched": "CG-C5E48B",
+      "distance": 0.03682530926987093,
+      "confidence": 96.3174690730129,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MS-6857A7_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "MT-1EB387",
+      "distortion": "blur_11",
+      "result": "no_match",
+      "distance": 0.5388947524140157,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MT-1EB387_blur_11_nomatch.jpg"
+    },
+    {
+      "inmate_id": "MT-1EB387",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "MT-1EB387",
+      "matched": "AM-AC297B",
+      "distance": 0.04721857990245382,
+      "confidence": 95.27814200975462,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MT-1EB387_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "MT-1EB387",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "MT-1EB387",
+      "matched": "JC-9BE591",
+      "distance": 0.02247010304391106,
+      "confidence": 97.75298969560889,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MT-1EB387_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "MW-5A82BD",
+      "distortion": "blur_11",
+      "result": "wrong_match",
+      "expected": "MW-5A82BD",
+      "matched": "AM-AC297B",
+      "distance": 0.333159819282276,
+      "confidence": 66.6840180717724,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MW-5A82BD_blur_11_wrong.jpg"
+    },
+    {
+      "inmate_id": "MW-5A82BD",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "MW-5A82BD",
+      "matched": "MM-E19227",
+      "distance": 0.08613451196044641,
+      "confidence": 91.38654880395536,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MW-5A82BD_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "MW-5A82BD",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "MW-5A82BD",
+      "matched": "JC-C4CC03",
+      "distance": 0.03360996169559061,
+      "confidence": 96.63900383044094,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MW-5A82BD_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "MW-7A9AE4",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "MW-7A9AE4",
+      "matched": "LH-38DBD8",
+      "distance": 0.03934314335954292,
+      "confidence": 96.0656856640457,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\MW-7A9AE4_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "NC-535F91",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "NC-535F91",
+      "matched": "BN-347434",
+      "distance": 0.022519774573644735,
+      "confidence": 97.74802254263552,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\NC-535F91_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "NC-535F91",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "NC-535F91",
+      "matched": "JK-DC562E",
+      "distance": 0.02978161080815578,
+      "confidence": 97.02183891918442,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\NC-535F91_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "NM-68868A",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "NM-68868A",
+      "matched": "JC-8DB340",
+      "distance": 0.042253112327152675,
+      "confidence": 95.77468876728473,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\NM-68868A_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "NM-68868A",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "NM-68868A",
+      "matched": "JA-970267",
+      "distance": 0.039163028897474916,
+      "confidence": 96.0836971102525,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\NM-68868A_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "NP-56A3DA",
+      "distortion": "blur_11",
+      "result": "wrong_match",
+      "expected": "NP-56A3DA",
+      "matched": "JP-3CCAD3",
+      "distance": 0.2481802469845077,
+      "confidence": 75.18197530154923,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\NP-56A3DA_blur_11_wrong.jpg"
+    },
+    {
+      "inmate_id": "NP-56A3DA",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "NP-56A3DA",
+      "matched": "CDJ-713551",
+      "distance": 0.023265492528456555,
+      "confidence": 97.67345074715435,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\NP-56A3DA_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "NP-56A3DA",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "NP-56A3DA",
+      "matched": "FV-10BD66",
+      "distance": 0.056714555408768574,
+      "confidence": 94.32854445912314,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\NP-56A3DA_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "NP-993181",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "NP-993181",
+      "matched": "DI-0408C3",
+      "distance": 0.027142771177887104,
+      "confidence": 97.28572288221129,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\NP-993181_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "NP-993181",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "NP-993181",
+      "matched": "RSH-A2F8C2",
+      "distance": 0.04255516939803361,
+      "confidence": 95.74448306019664,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\NP-993181_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "PA-A64654",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "PA-A64654",
+      "matched": "EZ-77E59A",
+      "distance": 0.03266549169436339,
+      "confidence": 96.73345083056365,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\PA-A64654_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "PA-A64654",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "PA-A64654",
+      "matched": "CB-713362",
+      "distance": 0.06842222368307527,
+      "confidence": 93.15777763169247,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\PA-A64654_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "PE-442F2C",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "PE-442F2C",
+      "matched": "CB-713362",
+      "distance": 0.029939307155178674,
+      "confidence": 97.00606928448214,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\PE-442F2C_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "PE-442F2C",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "PE-442F2C",
+      "matched": "DW-C69E52",
+      "distance": 0.04640170477866146,
+      "confidence": 95.35982952213385,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\PE-442F2C_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "PE-502FDA",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "PE-502FDA",
+      "matched": "JT-92F16F",
+      "distance": 0.03375520568221613,
+      "confidence": 96.62447943177838,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\PE-502FDA_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "RD-F64315",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "RD-F64315",
+      "matched": "KV-95D847",
+      "distance": 0.027987196564027705,
+      "confidence": 97.20128034359723,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RD-F64315_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "RD-F64315",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "RD-F64315",
+      "matched": "FV-10BD66",
+      "distance": 0.08174476719424528,
+      "confidence": 91.82552328057547,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RD-F64315_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "RG-1036C0",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "RG-1036C0",
+      "matched": "EM-8BB98E",
+      "distance": 0.027794137343578162,
+      "confidence": 97.22058626564218,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RG-1036C0_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "RG-1036C0",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "RG-1036C0",
+      "matched": "PA-A64654",
+      "distance": 0.029064334405690784,
+      "confidence": 97.09356655943093,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RG-1036C0_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "RG-FD2D2F",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "RG-FD2D2F",
+      "matched": "PE-502FDA",
+      "distance": 0.015623157396888576,
+      "confidence": 98.43768426031114,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RG-FD2D2F_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "RG-FD2D2F",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "RG-FD2D2F",
+      "matched": "RR-CFE5EC",
+      "distance": 0.02952550315143676,
+      "confidence": 97.04744968485632,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RG-FD2D2F_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "RL-3CDFE4",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "RL-3CDFE4",
+      "matched": "SL-E4F781",
+      "distance": 0.02048496351296225,
+      "confidence": 97.95150364870378,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RL-3CDFE4_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "RL-3CDFE4",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "RL-3CDFE4",
+      "matched": "MS-6857A7",
+      "distance": 0.02953891846061052,
+      "confidence": 97.04610815393895,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RL-3CDFE4_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "RM-974853",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "RM-974853",
+      "matched": "JG-AD5984",
+      "distance": 0.03014733953189286,
+      "confidence": 96.98526604681071,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RM-974853_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "RM-974853",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "RM-974853",
+      "matched": "RSH-A2F8C2",
+      "distance": 0.03679810587891741,
+      "confidence": 96.32018941210826,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RM-974853_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "RR-CFE5EC",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "RR-CFE5EC",
+      "matched": "CB-A01BB6",
+      "distance": 0.039815749821048296,
+      "confidence": 96.01842501789517,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RR-CFE5EC_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "RR-CFE5EC",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "RR-CFE5EC",
+      "matched": "RTE-EB5101",
+      "distance": 0.01965339625647522,
+      "confidence": 98.03466037435248,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RR-CFE5EC_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "RS-636DF4",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "RS-636DF4",
+      "matched": "FV-10BD66",
+      "distance": 0.10698544017276124,
+      "confidence": 89.30145598272388,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RS-636DF4_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "RS-636DF4",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "RS-636DF4",
+      "matched": "EE-927E75",
+      "distance": 0.04319483912526856,
+      "confidence": 95.68051608747314,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RS-636DF4_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "RSH-A2F8C2",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "RSH-A2F8C2",
+      "matched": "LH-38DBD8",
+      "distance": 0.043113159335207984,
+      "confidence": 95.6886840664792,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RSH-A2F8C2_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "RSH-A2F8C2",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "RSH-A2F8C2",
+      "matched": "WM-D266FC",
+      "distance": 0.060076374503457375,
+      "confidence": 93.99236254965426,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RSH-A2F8C2_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "RTE-EB5101",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "RTE-EB5101",
+      "matched": "PE-502FDA",
+      "distance": 0.01463268533091977,
+      "confidence": 98.53673146690802,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RTE-EB5101_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "RTE-EB5101",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "RTE-EB5101",
+      "matched": "JC-9BE591",
+      "distance": 0.02861958955550492,
+      "confidence": 97.13804104444951,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\RTE-EB5101_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "SL-E4F781",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "SL-E4F781",
+      "matched": "RR-CFE5EC",
+      "distance": 0.02602548655195991,
+      "confidence": 97.39745134480401,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\SL-E4F781_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "SL-E4F781",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "SL-E4F781",
+      "matched": "JT-92F16F",
+      "distance": 0.03245647370605964,
+      "confidence": 96.75435262939403,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\SL-E4F781_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "SL-EA0262",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "SL-EA0262",
+      "matched": "SL-E4F781",
+      "distance": 0.029423948377643172,
+      "confidence": 97.05760516223569,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\SL-EA0262_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "SL-EA0262",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "SL-EA0262",
+      "matched": "JC-8DB340",
+      "distance": 0.03601514412721385,
+      "confidence": 96.39848558727861,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\SL-EA0262_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "SM-6C4B84",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "SM-6C4B84",
+      "matched": "PA-A64654",
+      "distance": 0.05565441226161583,
+      "confidence": 94.43455877383842,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\SM-6C4B84_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "SM-6C4B84",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "SM-6C4B84",
+      "matched": "NM-68868A",
+      "distance": 0.08239359323938122,
+      "confidence": 91.76064067606188,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\SM-6C4B84_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "SM-F8ED60",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "SM-F8ED60",
+      "matched": "TF-DF069B",
+      "distance": 0.05456337628979502,
+      "confidence": 94.5436623710205,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\SM-F8ED60_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "SS-B76481",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "SS-B76481",
+      "matched": "AM-AC297B",
+      "distance": 0.11836007785926628,
+      "confidence": 88.16399221407337,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\SS-B76481_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "SS-B76481",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "SS-B76481",
+      "matched": "FV-10BD66",
+      "distance": 0.14051767668619108,
+      "confidence": 85.9482323313809,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\SS-B76481_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "TF-DF069B",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "TF-DF069B",
+      "matched": "LD-1FDAAF",
+      "distance": 0.05143820745202543,
+      "confidence": 94.85617925479745,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\TF-DF069B_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "TF-DF069B",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "TF-DF069B",
+      "matched": "AM-AC297B",
+      "distance": 0.07022444370289671,
+      "confidence": 92.97755562971032,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\TF-DF069B_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "TH-8FB080",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "TH-8FB080",
+      "matched": "PE-442F2C",
+      "distance": 0.05111707308963698,
+      "confidence": 94.8882926910363,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\TH-8FB080_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "TH-8FB080",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "TH-8FB080",
+      "matched": "TF-DF069B",
+      "distance": 0.04759474258042873,
+      "confidence": 95.24052574195713,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\TH-8FB080_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "TM-11FD85",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "TM-11FD85",
+      "matched": "TH-8FB080",
+      "distance": 0.05671520967340726,
+      "confidence": 94.32847903265927,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\TM-11FD85_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "TM-11FD85",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "TM-11FD85",
+      "matched": "MP-C92531",
+      "distance": 0.03942340595041849,
+      "confidence": 96.05765940495814,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\TM-11FD85_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "TR-D9A106",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "TR-D9A106",
+      "matched": "JG-AD5984",
+      "distance": 0.061622547895887725,
+      "confidence": 93.83774521041123,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\TR-D9A106_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "TR-D9A106",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "TR-D9A106",
+      "matched": "RR-CFE5EC",
+      "distance": 0.026757084670514075,
+      "confidence": 97.32429153294859,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\TR-D9A106_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "TS-F391B4",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "TS-F391B4",
+      "matched": "NC-535F91",
+      "distance": 0.03754733170537261,
+      "confidence": 96.24526682946274,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\TS-F391B4_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "TS-F391B4",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "TS-F391B4",
+      "matched": "JP-3CCAD3",
+      "distance": 0.0542728368440939,
+      "confidence": 94.57271631559061,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\TS-F391B4_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "WA-4F2494",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "WA-4F2494",
+      "matched": "EZ-77E59A",
+      "distance": 0.03377897100577554,
+      "confidence": 96.62210289942244,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\WA-4F2494_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "WM-D266FC",
+      "distortion": "noise_30",
+      "result": "wrong_match",
+      "expected": "WM-D266FC",
+      "matched": "EZ-77E59A",
+      "distance": 0.019401039001027742,
+      "confidence": 98.05989609989723,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\WM-D266FC_noise_30_wrong.jpg"
+    },
+    {
+      "inmate_id": "WM-D266FC",
+      "distortion": "combined",
+      "result": "wrong_match",
+      "expected": "WM-D266FC",
+      "matched": "JT-A0536C",
+      "distance": 0.07875026643896543,
+      "confidence": 92.12497335610345,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\WM-D266FC_combined_wrong.jpg"
+    },
+    {
+      "inmate_id": "CDJ-C3A726",
+      "distortion": "resolution_48",
+      "result": "no_match",
+      "distance": 0.5767035750090901,
+      "image_path": "C:\\Users\\Nicholas Eke\\Downloads\\Heimdall-project\\backend\\scripts\\failed_samples\\CDJ-C3A726_resolution_48_nomatch.jpg"
+    }
+  ],
+  "timing": {
+    "mean_inference_time_ms": 172.08,
+    "max_inference_time_ms": 681.0
+  },
+  "breaking_points": {
+    "rotation": {
+      "levels": {
+        "0": {
+          "correct": 4,
+          "wrong": 0,
+          "no_match": 11,
+          "total": 15,
+          "accuracy": 26.7
+        },
+        "10": {
+          "correct": 4,
+          "wrong": 0,
+          "no_match": 11,
+          "total": 15,
+          "accuracy": 26.7
+        },
+        "20": {
+          "correct": 4,
+          "wrong": 0,
+          "no_match": 11,
+          "total": 15,
+          "accuracy": 26.7
+        },
+        "30": {
+          "correct": 4,
+          "wrong": 0,
+          "no_match": 11,
+          "total": 15,
+          "accuracy": 26.7
+        },
+        "45": {
+          "correct": 0,
+          "wrong": 3,
+          "no_match": 12,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "60": {
+          "correct": 0,
+          "wrong": 3,
+          "no_match": 12,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "90": {
+          "correct": 0,
+          "wrong": 3,
+          "no_match": 12,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "120": {
+          "correct": 0,
+          "wrong": 3,
+          "no_match": 12,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "150": {
+          "correct": 0,
+          "wrong": 3,
+          "no_match": 12,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "180": {
+          "correct": 0,
+          "wrong": 3,
+          "no_match": 12,
+          "total": 15,
+          "accuracy": 0.0
+        }
+      },
+      "breaking_level": 0
+    },
+    "blur": {
+      "levels": {
+        "3": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "5": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "7": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "11": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "15": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "21": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "31": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        }
+      },
+      "breaking_level": 3
+    },
+    "noise": {
+      "levels": {
+        "5": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "10": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "20": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "30": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "50": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "70": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "100": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        }
+      },
+      "breaking_level": 5
+    },
+    "resolution": {
+      "levels": {
+        "96": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "80": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "64": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "48": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "32": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "24": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "16": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        }
+      },
+      "breaking_level": 16
+    },
+    "brightness": {
+      "levels": {
+        "0": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "20": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "50": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "-10": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "-30": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "-50": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "100": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        }
+      },
+      "breaking_level": -50
+    },
+    "occlusion": {
+      "levels": {
+        "0": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "10": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "20": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "30": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "40": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        },
+        "50": {
+          "correct": 0,
+          "wrong": 0,
+          "no_match": 15,
+          "total": 15,
+          "accuracy": 0.0
+        }
+      },
+      "breaking_level": 0
+    }
+  },
+  "problem_inmates": [
+    {
+      "inmate_id": "AA-9E4092",
+      "name": "Adam Armstrong",
+      "failures": [
+        "noise_30: WRONG (matched JK-DC562E)",
+        "combined: WRONG (matched TR-D9A106)"
+      ]
+    },
+    {
+      "inmate_id": "ABV-9DC55F",
+      "name": "Adrian Valdez",
+      "failures": [
+        "noise_30: WRONG (matched CD-83BB76)",
+        "combined: WRONG (matched MW-7A9AE4)"
+      ]
+    },
+    {
+      "inmate_id": "AF-DF4155",
+      "name": "Alex Fisher",
+      "failures": [
+        "noise_30: WRONG (matched FF-40CAF0)",
+        "combined: WRONG (matched CG-554403)"
+      ]
+    },
+    {
+      "inmate_id": "AL-A91337",
+      "name": "Adam Long",
+      "failures": [
+        "noise_30: WRONG (matched EM-8BB98E)"
+      ]
+    },
+    {
+      "inmate_id": "AM-AC297B",
+      "name": "Alex Moore",
+      "failures": [
+        "noise_30: WRONG (matched JK-DC562E)",
+        "combined: WRONG (matched JK-DC562E)"
+      ]
+    },
+    {
+      "inmate_id": "ASC-0F6ECB",
+      "name": "Andrew Cook",
+      "failures": [
+        "noise_30: WRONG (matched MA-1D505E)"
+      ]
+    },
+    {
+      "inmate_id": "BB-19DFA3",
+      "name": "Bradley Baker",
+      "failures": [
+        "noise_30: WRONG (matched HE-81D026)",
+        "combined: WRONG (matched DK-412E9A)"
+      ]
+    },
+    {
+      "inmate_id": "BB-DFBBFB",
+      "name": "Bryan Bryant",
+      "failures": [
+        "noise_30: WRONG (matched CC-D0AB89)",
+        "combined: WRONG (matched AM-AC297B)"
+      ]
+    },
+    {
+      "inmate_id": "BC-67BB74",
+      "name": "Benjamin Cruz",
+      "failures": [
+        "noise_30: WRONG (matched RR-CFE5EC)",
+        "combined: WRONG (matched CC-D0AB89)"
+      ]
+    },
+    {
+      "inmate_id": "BN-347434",
+      "name": "Bruce Newman",
+      "failures": [
+        "noise_30: WRONG (matched AA-9E4092)",
+        "combined: WRONG (matched RM-974853)"
+      ]
+    },
+    {
+      "inmate_id": "CB-713362",
+      "name": "Chris Bell",
+      "failures": [
+        "noise_30: WRONG (matched MS-6857A7)",
+        "combined: WRONG (matched MW-7A9AE4)"
+      ]
+    },
+    {
+      "inmate_id": "CB-A01BB6",
+      "name": "Carl Brooks",
+      "failures": [
+        "noise_30: WRONG (matched SL-EA0262)",
+        "combined: WRONG (matched RSH-A2F8C2)"
+      ]
+    },
+    {
+      "inmate_id": "CC-D0AB89",
+      "name": "Clarence Campbell",
+      "failures": [
+        "noise_30: WRONG (matched RD-F64315)",
+        "combined: WRONG (matched JK-DC562E)"
+      ]
+    },
+    {
+      "inmate_id": "CD-83BB76",
+      "name": "Carl Davis",
+      "failures": [
+        "noise_30: WRONG (matched KS-157060)",
+        "combined: WRONG (matched JT-92F16F)"
+      ]
+    },
+    {
+      "inmate_id": "CDJ-713551",
+      "name": "Calvin Johnson",
+      "failures": [
+        "noise_30: WRONG (matched JS-A5A10E)",
+        "combined: WRONG (matched MA-1D505E)"
+      ]
+    },
+    {
+      "inmate_id": "CG-554403",
+      "name": "Chris Griffin",
+      "failures": [
+        "dark: WRONG (matched MP-C92531)",
+        "noise_30: WRONG (matched RR-CFE5EC)",
+        "combined: WRONG (matched JC-C4CC03)"
+      ]
+    },
+    {
+      "inmate_id": "CG-C5E48B",
+      "name": "Christopher Gordon",
+      "failures": [
+        "noise_30: WRONG (matched JT-92F16F)",
+        "combined: WRONG (matched JT-92F16F)"
+      ]
+    },
+    {
+      "inmate_id": "CR-F705B7",
+      "name": "Charles Russell",
+      "failures": [
+        "noise_30: WRONG (matched WM-D266FC)",
+        "combined: WRONG (matched MS-6857A7)"
+      ]
+    },
+    {
+      "inmate_id": "CS-D76876",
+      "name": "Carlos Shaw",
+      "failures": [
+        "noise_30: WRONG (matched DW-C69E52)"
+      ]
+    },
+    {
+      "inmate_id": "DI-0408C3",
+      "name": "Dylan Ingram",
+      "failures": [
+        "blur_11: WRONG (matched JC-85E7A8)",
+        "noise_30: WRONG (matched JS-A5A10E)",
+        "combined: WRONG (matched CB-713362)"
+      ]
+    },
+    {
+      "inmate_id": "DJ-9AC0A7",
+      "name": "Derek Johnson",
+      "failures": [
+        "combined: WRONG (matched MM-E19227)"
+      ]
+    },
+    {
+      "inmate_id": "DK-412E9A",
+      "name": "Dylan Kennedy",
+      "failures": [
+        "noise_30: WRONG (matched JC-9BE591)",
+        "combined: WRONG (matched NP-56A3DA)"
+      ]
+    },
+    {
+      "inmate_id": "DR-656A3D",
+      "name": "Dennis Rivera",
+      "failures": [
+        "combined: WRONG (matched EM-8BB98E)"
+      ]
+    },
+    {
+      "inmate_id": "DS-359538",
+      "name": "Dwight Stephens",
+      "failures": [
+        "noise_30: WRONG (matched PA-A64654)",
+        "combined: WRONG (matched SM-6C4B84)"
+      ]
+    },
+    {
+      "inmate_id": "DW-C69E52",
+      "name": "Dwight White",
+      "failures": [
+        "noise_30: WRONG (matched JA-970267)",
+        "combined: WRONG (matched JC-9BE591)"
+      ]
+    },
+    {
+      "inmate_id": "ED-089169",
+      "name": "Edwin Davis",
+      "failures": [
+        "noise_30: WRONG (matched NC-535F91)",
+        "combined: WRONG (matched LD-1FDAAF)"
+      ]
+    },
+    {
+      "inmate_id": "EE-927E75",
+      "name": "Evan Ellis",
+      "failures": [
+        "blur_11: WRONG (matched WM-D266FC)",
+        "noise_30: WRONG (matched ABV-9DC55F)",
+        "combined: WRONG (matched CG-C5E48B)"
+      ]
+    },
+    {
+      "inmate_id": "EM-8BB98E",
+      "name": "Ernest Marshall",
+      "failures": [
+        "combined: WRONG (matched MP-C92531)"
+      ]
+    },
+    {
+      "inmate_id": "ES-5A2708",
+      "name": "Ernest Snyder",
+      "failures": [
+        "noise_30: WRONG (matched CB-713362)",
+        "combined: WRONG (matched BC-67BB74)"
+      ]
+    },
+    {
+      "inmate_id": "EZ-77E59A",
+      "name": "Evan Zimmerman",
+      "failures": [
+        "combined: WRONG (matched FV-10BD66)"
+      ]
+    },
+    {
+      "inmate_id": "FF-40CAF0",
+      "name": "Felix Foster",
+      "failures": [
+        "combined: WRONG (matched HE-81D026)"
+      ]
+    },
+    {
+      "inmate_id": "FV-10BD66",
+      "name": "Fernando Valdez",
+      "failures": [
+        "noise_30: WRONG (matched BC-67BB74)",
+        "combined: WRONG (matched NP-56A3DA)"
+      ]
+    },
+    {
+      "inmate_id": "GH-8598EA",
+      "name": "Gilbert Hughes",
+      "failures": [
+        "noise_30: WRONG (matched LR-CFA100)",
+        "combined: WRONG (matched MC-A3211D)"
+      ]
+    },
+    {
+      "inmate_id": "GP-6A73E5",
+      "name": "Gerald Perez",
+      "failures": [
+        "noise_30: WRONG (matched CDJ-713551)",
+        "combined: WRONG (matched DW-C69E52)"
+      ]
+    },
+    {
+      "inmate_id": "HE-81D026",
+      "name": "Howard Evans",
+      "failures": [
+        "noise_30: WRONG (matched JK-DC562E)",
+        "combined: WRONG (matched JK-DC562E)"
+      ]
+    },
+    {
+      "inmate_id": "HS-1F1DD9",
+      "name": "Herbert Smith",
+      "failures": [
+        "noise_30: WRONG (matched FF-40CAF0)",
+        "combined: WRONG (matched JT-92F16F)"
+      ]
+    },
+    {
+      "inmate_id": "inmate",
+      "name": "Ivan Newman",
+      "failures": [
+        "resolution_48: no match (dist=0.451)"
+      ]
+    },
+    {
+      "inmate_id": "JA-970267",
+      "name": "Jerome Adams",
+      "failures": [
+        "noise_30: WRONG (matched KB-55A91E)",
+        "combined: WRONG (matched DW-C69E52)"
+      ]
+    },
+    {
+      "inmate_id": "JB-A76DFC",
+      "name": "Jack Butler",
+      "failures": [
+        "noise_30: WRONG (matched TM-11FD85)",
+        "combined: WRONG (matched FV-10BD66)"
+      ]
+    },
+    {
+      "inmate_id": "JC-19BB85",
+      "name": "Jason Carter",
+      "failures": [
+        "noise_30: WRONG (matched DI-0408C3)",
+        "combined: WRONG (matched CG-C5E48B)"
+      ]
+    },
+    {
+      "inmate_id": "JC-85E7A8",
+      "name": "Jason Campbell",
+      "failures": [
+        "noise_30: WRONG (matched CG-C5E48B)"
+      ]
+    },
+    {
+      "inmate_id": "JC-8DB340",
+      "name": "John Cox",
+      "failures": [
+        "noise_30: WRONG (matched TM-11FD85)",
+        "combined: WRONG (matched KC-BABB0A)"
+      ]
+    },
+    {
+      "inmate_id": "JC-9BE591",
+      "name": "James Cooper",
+      "failures": [
+        "blur_11: no match (dist=0.461)",
+        "noise_30: WRONG (matched RD-F64315)",
+        "combined: WRONG (matched RS-636DF4)"
+      ]
+    },
+    {
+      "inmate_id": "JC-C4CC03",
+      "name": "Jeffrey Cook",
+      "failures": [
+        "noise_30: WRONG (matched PE-442F2C)",
+        "combined: WRONG (matched JK-DC562E)"
+      ]
+    },
+    {
+      "inmate_id": "JC-D2983C",
+      "name": "Jesse Clark",
+      "failures": [
+        "noise_30: WRONG (matched JC-85E7A8)",
+        "combined: WRONG (matched PA-A64654)"
+      ]
+    },
+    {
+      "inmate_id": "JG-AD5984",
+      "name": "Jerome Gibson",
+      "failures": [
+        "noise_30: WRONG (matched CB-713362)",
+        "combined: WRONG (matched JC-19BB85)"
+      ]
+    },
+    {
+      "inmate_id": "JH-FE4FB4",
+      "name": "Juan Henry",
+      "failures": [
+        "combined: WRONG (matched BN-347434)"
+      ]
+    },
+    {
+      "inmate_id": "JK-DC562E",
+      "name": "Juan Knight",
+      "failures": [
+        "noise_30: WRONG (matched CD-83BB76)",
+        "combined: WRONG (matched JS-16BD3B)"
+      ]
+    },
+    {
+      "inmate_id": "JN-D32DE5",
+      "name": "Joshua Newman",
+      "failures": [
+        "noise_30: WRONG (matched KC-BABB0A)",
+        "combined: WRONG (matched JG-AD5984)"
+      ]
+    },
+    {
+      "inmate_id": "JP-3CCAD3",
+      "name": "Juan Phillips",
+      "failures": [
+        "noise_30: WRONG (matched RD-F64315)",
+        "combined: WRONG (matched CG-C5E48B)"
+      ]
+    },
+    {
+      "inmate_id": "JS-16BD3B",
+      "name": "Jacob Scott",
+      "failures": [
+        "blur_11: WRONG (matched EE-927E75)",
+        "noise_30: WRONG (matched JA-970267)",
+        "combined: WRONG (matched CB-713362)"
+      ]
+    },
+    {
+      "inmate_id": "JS-A5A10E",
+      "name": "Jonathan Sanders",
+      "failures": [
+        "noise_30: WRONG (matched MM-E19227)"
+      ]
+    },
+    {
+      "inmate_id": "JT-92F16F",
+      "name": "Jack Turner",
+      "failures": [
+        "noise_30: WRONG (matched MS-6857A7)",
+        "combined: WRONG (matched EM-8BB98E)"
+      ]
+    },
+    {
+      "inmate_id": "JVF-E55365",
+      "name": "Jonathan Fisher",
+      "failures": [
+        "noise_30: WRONG (matched RL-3CDFE4)",
+        "combined: WRONG (matched SL-EA0262)"
+      ]
+    },
+    {
+      "inmate_id": "KB-55A91E",
+      "name": "Keith Barnes",
+      "failures": [
+        "combined: WRONG (matched KC-BABB0A)"
+      ]
+    },
+    {
+      "inmate_id": "KC-BABB0A",
+      "name": "Kevin Cox",
+      "failures": [
+        "noise_30: WRONG (matched HE-81D026)",
+        "combined: WRONG (matched CS-D76876)"
+      ]
+    },
+    {
+      "inmate_id": "KS-157060",
+      "name": "Kevin Stewart",
+      "failures": [
+        "noise_30: WRONG (matched JA-970267)",
+        "combined: WRONG (matched KB-55A91E)"
+      ]
+    },
+    {
+      "inmate_id": "KV-95D847",
+      "name": "Keith Vasquez",
+      "failures": [
+        "noise_30: WRONG (matched RR-CFE5EC)",
+        "combined: WRONG (matched SM-6C4B84)"
+      ]
+    },
+    {
+      "inmate_id": "KY-1BC1AE",
+      "name": "Kevin Young",
+      "failures": [
+        "noise_30: WRONG (matched ASC-0F6ECB)",
+        "combined: WRONG (matched RD-F64315)"
+      ]
+    },
+    {
+      "inmate_id": "LD-1FDAAF",
+      "name": "Luis Diaz",
+      "failures": [
+        "noise_30: WRONG (matched RG-FD2D2F)"
+      ]
+    },
+    {
+      "inmate_id": "LH-38DBD8",
+      "name": "Lucas Hernandez",
+      "failures": [
+        "noise_30: WRONG (matched KV-95D847)",
+        "combined: WRONG (matched JC-9BE591)"
+      ]
+    },
+    {
+      "inmate_id": "LR-CFA100",
+      "name": "Louis Rivera",
+      "failures": [
+        "noise_30: WRONG (matched NP-56A3DA)",
+        "combined: WRONG (matched DS-359538)"
+      ]
+    },
+    {
+      "inmate_id": "MA-1D505E",
+      "name": "Martin Adams",
+      "failures": [
+        "noise_30: WRONG (matched PA-A64654)",
+        "combined: WRONG (matched JE-FA02E1)"
+      ]
+    },
+    {
+      "inmate_id": "MC-A3211D",
+      "name": "Matthew Campbell",
+      "failures": [
+        "noise_30: WRONG (matched JC-19BB85)",
+        "combined: WRONG (matched JA-970267)"
+      ]
+    },
+    {
+      "inmate_id": "MH-B6BA66",
+      "name": "Maurice Hill",
+      "failures": [
+        "noise_30: WRONG (matched PE-502FDA)",
+        "combined: WRONG (matched RG-FD2D2F)"
+      ]
+    },
+    {
+      "inmate_id": "MK-6A99EE",
+      "name": "Malcolm Kelly",
+      "failures": [
+        "noise_30: WRONG (matched SM-6C4B84)",
+        "combined: WRONG (matched CB-A01BB6)"
+      ]
+    },
+    {
+      "inmate_id": "MM-E19227",
+      "name": "Malcolm Marshall",
+      "failures": [
+        "blur_11: WRONG (matched ED-089169)",
+        "combined: WRONG (matched FF-40CAF0)"
+      ]
+    },
+    {
+      "inmate_id": "MP-C92531",
+      "name": "Malcolm Perry",
+      "failures": [
+        "noise_30: WRONG (matched CG-554403)",
+        "combined: WRONG (matched CB-713362)"
+      ]
+    },
+    {
+      "inmate_id": "MS-6857A7",
+      "name": "Mark Stewart",
+      "failures": [
+        "noise_30: WRONG (matched SM-6C4B84)",
+        "combined: WRONG (matched CG-C5E48B)"
+      ]
+    },
+    {
+      "inmate_id": "MT-1EB387",
+      "name": "Malcolm Turner",
+      "failures": [
+        "blur_11: no match (dist=0.539)",
+        "noise_30: WRONG (matched AM-AC297B)",
+        "combined: WRONG (matched JC-9BE591)"
+      ]
+    },
+    {
+      "inmate_id": "MW-5A82BD",
+      "name": "Michael Wells",
+      "failures": [
+        "blur_11: WRONG (matched AM-AC297B)",
+        "noise_30: WRONG (matched MM-E19227)",
+        "combined: WRONG (matched JC-C4CC03)"
+      ]
+    },
+    {
+      "inmate_id": "MW-7A9AE4",
+      "name": "Maurice Williams",
+      "failures": [
+        "noise_30: WRONG (matched LH-38DBD8)"
+      ]
+    },
+    {
+      "inmate_id": "NC-535F91",
+      "name": "Norman Clark",
+      "failures": [
+        "noise_30: WRONG (matched BN-347434)",
+        "combined: WRONG (matched JK-DC562E)"
+      ]
+    },
+    {
+      "inmate_id": "NM-68868A",
+      "name": "Norman Moore",
+      "failures": [
+        "noise_30: WRONG (matched JC-8DB340)",
+        "combined: WRONG (matched JA-970267)"
+      ]
+    },
+    {
+      "inmate_id": "NP-56A3DA",
+      "name": "Norman Parker",
+      "failures": [
+        "blur_11: WRONG (matched JP-3CCAD3)",
+        "noise_30: WRONG (matched CDJ-713551)",
+        "combined: WRONG (matched FV-10BD66)"
+      ]
+    },
+    {
+      "inmate_id": "NP-993181",
+      "name": "Neil Patterson",
+      "failures": [
+        "noise_30: WRONG (matched DI-0408C3)",
+        "combined: WRONG (matched RSH-A2F8C2)"
+      ]
+    },
+    {
+      "inmate_id": "PA-A64654",
+      "name": "Preston Adams",
+      "failures": [
+        "noise_30: WRONG (matched EZ-77E59A)",
+        "combined: WRONG (matched CB-713362)"
+      ]
+    },
+    {
+      "inmate_id": "PE-442F2C",
+      "name": "Peter Edwards",
+      "failures": [
+        "noise_30: WRONG (matched CB-713362)",
+        "combined: WRONG (matched DW-C69E52)"
+      ]
+    },
+    {
+      "inmate_id": "PE-502FDA",
+      "name": "Peter Edwards",
+      "failures": [
+        "noise_30: WRONG (matched JT-92F16F)"
+      ]
+    },
+    {
+      "inmate_id": "RD-F64315",
+      "name": "Raymond Davis",
+      "failures": [
+        "noise_30: WRONG (matched KV-95D847)",
+        "combined: WRONG (matched FV-10BD66)"
+      ]
+    },
+    {
+      "inmate_id": "RG-1036C0",
+      "name": "Raymond Graham",
+      "failures": [
+        "noise_30: WRONG (matched EM-8BB98E)",
+        "combined: WRONG (matched PA-A64654)"
+      ]
+    },
+    {
+      "inmate_id": "RG-FD2D2F",
+      "name": "Ralph Gonzalez",
+      "failures": [
+        "noise_30: WRONG (matched PE-502FDA)",
+        "combined: WRONG (matched RR-CFE5EC)"
+      ]
+    },
+    {
+      "inmate_id": "RL-3CDFE4",
+      "name": "Roger Lee",
+      "failures": [
+        "noise_30: WRONG (matched SL-E4F781)",
+        "combined: WRONG (matched MS-6857A7)"
+      ]
+    },
+    {
+      "inmate_id": "RM-974853",
+      "name": "Ryan Moore",
+      "failures": [
+        "noise_30: WRONG (matched JG-AD5984)",
+        "combined: WRONG (matched RSH-A2F8C2)"
+      ]
+    },
+    {
+      "inmate_id": "RR-CFE5EC",
+      "name": "Robert Reynolds",
+      "failures": [
+        "noise_30: WRONG (matched CB-A01BB6)",
+        "combined: WRONG (matched RTE-EB5101)"
+      ]
+    },
+    {
+      "inmate_id": "RS-636DF4",
+      "name": "Roger Snyder",
+      "failures": [
+        "noise_30: WRONG (matched FV-10BD66)",
+        "combined: WRONG (matched EE-927E75)"
+      ]
+    },
+    {
+      "inmate_id": "RSH-A2F8C2",
+      "name": "Ronald Henry",
+      "failures": [
+        "noise_30: WRONG (matched LH-38DBD8)",
+        "combined: WRONG (matched WM-D266FC)"
+      ]
+    },
+    {
+      "inmate_id": "RTE-EB5101",
+      "name": "Roger Ellis",
+      "failures": [
+        "noise_30: WRONG (matched PE-502FDA)",
+        "combined: WRONG (matched JC-9BE591)"
+      ]
+    },
+    {
+      "inmate_id": "SL-E4F781",
+      "name": "Shane Long",
+      "failures": [
+        "noise_30: WRONG (matched RR-CFE5EC)",
+        "combined: WRONG (matched JT-92F16F)"
+      ]
+    },
+    {
+      "inmate_id": "SL-EA0262",
+      "name": "Simon Long",
+      "failures": [
+        "noise_30: WRONG (matched SL-E4F781)",
+        "combined: WRONG (matched JC-8DB340)"
+      ]
+    },
+    {
+      "inmate_id": "SM-6C4B84",
+      "name": "Scott Morgan",
+      "failures": [
+        "noise_30: WRONG (matched PA-A64654)",
+        "combined: WRONG (matched NM-68868A)"
+      ]
+    },
+    {
+      "inmate_id": "SM-F8ED60",
+      "name": "Stanley Miller",
+      "failures": [
+        "noise_30: WRONG (matched TF-DF069B)"
+      ]
+    },
+    {
+      "inmate_id": "SS-B76481",
+      "name": "Simon Stewart",
+      "failures": [
+        "noise_30: WRONG (matched AM-AC297B)",
+        "combined: WRONG (matched FV-10BD66)"
+      ]
+    },
+    {
+      "inmate_id": "TF-DF069B",
+      "name": "Theodore Fisher",
+      "failures": [
+        "noise_30: WRONG (matched LD-1FDAAF)",
+        "combined: WRONG (matched AM-AC297B)"
+      ]
+    },
+    {
+      "inmate_id": "TH-8FB080",
+      "name": "Travis Hunt",
+      "failures": [
+        "noise_30: WRONG (matched PE-442F2C)",
+        "combined: WRONG (matched TF-DF069B)"
+      ]
+    },
+    {
+      "inmate_id": "TM-11FD85",
+      "name": "Thomas McDonald",
+      "failures": [
+        "noise_30: WRONG (matched TH-8FB080)",
+        "combined: WRONG (matched MP-C92531)"
+      ]
+    },
+    {
+      "inmate_id": "TR-D9A106",
+      "name": "Todd Ross",
+      "failures": [
+        "noise_30: WRONG (matched JG-AD5984)",
+        "combined: WRONG (matched RR-CFE5EC)"
+      ]
+    },
+    {
+      "inmate_id": "TS-F391B4",
+      "name": "Timothy Sanchez",
+      "failures": [
+        "noise_30: WRONG (matched NC-535F91)",
+        "combined: WRONG (matched JP-3CCAD3)"
+      ]
+    },
+    {
+      "inmate_id": "WA-4F2494",
+      "name": "William Armstrong",
+      "failures": [
+        "noise_30: WRONG (matched EZ-77E59A)"
+      ]
+    },
+    {
+      "inmate_id": "WM-D266FC",
+      "name": "Wayne Martinez",
+      "failures": [
+        "noise_30: WRONG (matched EZ-77E59A)",
+        "combined: WRONG (matched JT-A0536C)"
+      ]
+    },
+    {
+      "inmate_id": "CDJ-C3A726",
+      "name": "Final Test Inmate",
+      "failures": [
+        "resolution_48: no match (dist=0.577)"
+      ]
+    }
+  ],
+  "overall_accuracy": 44.33,
+  "precision": 76.44,
+  "recall": 51.35
+}

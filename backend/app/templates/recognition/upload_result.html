@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+
+{% block title %}Recognition Result – Heimdall{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Recognition Result</h1>
+
+    {% if result.match %}
+        <div class="bg-green-100 text-green-700 p-4 rounded">
+            Match Found!<br>
+            Inmate Name: {{ result.inmate.name }}<br>
+            Inmate ID: {{ result.inmate.id }}
+        </div>
+    {% else %}
+        <div class="bg-red-100 text-red-700 p-4 rounded">
+            No Match Found.
+        </div>
+    {% endif %}
+
+    <a href="{{ url_for('recognition.upload_recognition') }}" class="text-blue-600 underline mt-4 inline-block">Try another image</a>
+</div>
+{% endblock %}

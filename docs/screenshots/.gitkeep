@@ -1,0 +1,8 @@
+# This file ensures the screenshots directory is tracked by Git
+# Add your screenshots here with the following filenames:
+# - login.png
+# - admin-dashboard.png
+# - live-monitoring.png
+# - upload-recognition.png
+# - inmate-profiles.png
+# - analytics.png
